@@ -1,0 +1,944 @@
+<!DOCTYPE html>
+<!--
+  MindPrint · Full Render 视图 高保真静态 Mock
+  Generated: 2026-05-28
+  Sources:
+    - ../DESIGN.md (tokens · colors · typography · Top Chrome 组件规格)
+    - ../EXPERIENCE.md (IA · Component Patterns: Top Chrome / More Menu /
+                       Inline Title Editor / Download Link · Key Flows §UJ-3)
+
+  目的:
+    呈现 MindPrint Full Render 视图 — alex 单击时间线上一张卡片后,
+    Entry 的 HTML 内容以"原貌等同性"(FR-5)在沙箱化容器中呈现。
+    顶部 chrome 固定, 包含 ← 返回 / 标题 + 归档时间 / ⟨ ⟩ 上一·下一 /
+    ⋯ 更多菜单(编辑标题 / 下载原 .html / 删除)。
+    主体渲染区是 "alex 的内容" 而非 MindPrint chrome —— 字体/配色
+    刻意与 MindPrint 设计系统形成对比, 兑现 FR-5 "原貌等同性" 承诺。
+
+  本 mock 是只读静态演示, 无 JavaScript 交互。
+  · "More 菜单展开态" 通过 :hover + CSS 实现, 演示 dropdown 视觉。
+  · 沙箱以 .sandbox-frame 包裹, 视觉上以微浅 inset 边框暗示边界,
+    生产中由 <iframe sandbox> 承担(NFR-1)。
+-->
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>MindPrint · Full Render — AI 工具调研单页 v1</title>
+
+<!-- 字体 — 中文宋体优先, 英文 Newsreader 兜底, sans-serif 仅 UI -->
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link
+  href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;500&family=Noto+Sans+SC:wght@400;500&family=Newsreader:ital,wght@0,400;0,500;1,400&family=JetBrains+Mono:wght@400;500&family=Inter:wght@400;500;600&display=swap"
+  rel="stylesheet"
+/>
+
+<style>
+  /* =========================================================
+     DESIGN.md tokens — CSS variables (Light mode primary)
+     ========================================================= */
+  :root {
+    /* Colors — Light mode */
+    --surface: #FAF8F3;
+    --surface-container-lowest: #FFFFFF;
+    --surface-container-low: #F5F2EB;
+    --surface-container: #F0EDE5;
+    --surface-container-high: #EAE7DD;
+    --surface-container-highest: #E4E0D5;
+    --on-surface: #1B1C19;
+    --on-surface-variant: #4E453D;
+    --outline: #80756B;
+    --outline-variant: #D1C4B9;
+    --primary: #735C41;
+    --on-primary: #FAF8F3;
+    --primary-container: #F0E5D2;
+    --on-primary-container: #3A2B16;
+    --secondary: #B84A39;
+    --on-secondary: #FFFFFF;
+    --error: #BA1A1A;
+
+    /* Shadows */
+    --shadow-rest: 0 1px 2px rgba(115, 92, 65, 0.04);
+    --shadow-hover: 0 4px 12px rgba(115, 92, 65, 0.08),
+                    0 1px 2px rgba(115, 92, 65, 0.06);
+    --shadow-menu: 0 8px 24px rgba(115, 92, 65, 0.12),
+                   0 2px 6px rgba(115, 92, 65, 0.08);
+
+    /* Rounded */
+    --rounded-sm: 0.125rem;
+    --rounded-default: 0.25rem;
+    --rounded-md: 0.375rem;
+    --rounded-lg: 0.5rem;
+    --rounded-xl: 0.75rem;
+
+    /* Spacing */
+    --unit: 8px;
+    --gutter: 24px;
+    --margin-mobile: 20px;
+    --margin-desktop: 56px;
+
+    /* Chrome height */
+    --chrome-h: 64px;
+
+    /* Typography family chains */
+    --ff-serif: "Source Han Serif SC", "Noto Serif SC", "Noto Serif CJK SC",
+                "Newsreader", "ET Book", Georgia, serif;
+    --ff-sans:  "Source Han Sans SC", "Noto Sans SC", "Noto Sans CJK SC",
+                "Inter", -apple-system, system-ui, sans-serif;
+    --ff-mono:  "JetBrains Mono", "SF Mono", "Source Han Mono",
+                ui-monospace, monospace;
+  }
+
+  /* =========================================================
+     Dark mode — "夜读灯下的旧书皮"
+     注意: Top Chrome 适配暗色, 但 .sandbox-frame 内部
+     是 alex 的 HTML, 不自动响应 prefers-color-scheme
+     (per spec — alex 自己 HTML 的设计自己决定)。
+     ========================================================= */
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --surface: #1A1B19;
+      --surface-container-lowest: #1A1B19;
+      --surface-container-low: #22231F;
+      --surface-container: #28291F;
+      --surface-container-high: #33342B;
+      --surface-container-highest: #3D3E33;
+      --on-surface: #F0EDE5;
+      --on-surface-variant: #C2BAA9;
+      --outline: #9A8E80;
+      --outline-variant: #3D3A33;
+      --primary: #E0C1A1;
+      --on-primary: #3A2B16;
+      --primary-container: #5A4730;
+      --on-primary-container: #F5D6B4;
+      --secondary: #E0A192;
+      --on-secondary: #5A1A0F;
+
+      --shadow-rest: 0 1px 2px rgba(0, 0, 0, 0.25);
+      --shadow-hover: 0 4px 12px rgba(0, 0, 0, 0.35),
+                      0 1px 2px rgba(0, 0, 0, 0.25);
+      --shadow-menu: 0 8px 24px rgba(0, 0, 0, 0.45),
+                     0 2px 6px rgba(0, 0, 0, 0.3);
+    }
+  }
+
+  /* =========================================================
+     Reset + base
+     ========================================================= */
+  *, *::before, *::after { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    background-color: var(--surface);
+    color: var(--on-surface);
+    font-family: var(--ff-serif);
+    font-size: 17px;
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    min-height: 100vh;
+  }
+
+  ::selection {
+    background-color: var(--primary-container);
+    color: var(--on-primary-container);
+  }
+
+  /* =========================================================
+     Focus ring — 2px primary outline
+     ========================================================= */
+  :focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+    border-radius: var(--rounded-default);
+  }
+
+  /* =========================================================
+     Top Chrome — 固定在视图顶部的 MindPrint 导航纸条
+     EXPERIENCE.md.Component Patterns > Top Chrome (Full Render)
+     ========================================================= */
+  .top-chrome {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background-color: var(--surface);
+    border-bottom: 1px solid var(--outline-variant);
+    height: var(--chrome-h);
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 0 var(--margin-desktop);
+    backdrop-filter: saturate(140%);
+  }
+
+  @media (max-width: 768px) {
+    .top-chrome {
+      padding: 0 var(--margin-mobile);
+      gap: 8px;
+    }
+  }
+
+  /* ---- Section: Left — 返回按钮 ---- */
+  .chrome-left {
+    flex: 0 0 auto;
+  }
+
+  .btn-back {
+    appearance: none;
+    border: 0;
+    background: transparent;
+    color: var(--on-surface);
+    font-family: var(--ff-sans);
+    font-size: 13px;
+    font-weight: 400;
+    line-height: 1.5;
+    padding: 8px 12px 8px 8px;
+    border-radius: var(--rounded-default);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    text-decoration: none;
+    transition: background-color 120ms ease, color 120ms ease;
+  }
+
+  .btn-back:hover {
+    background-color: var(--surface-container-low);
+    color: var(--primary);
+  }
+
+  .btn-back .arrow {
+    display: inline-block;
+    font-size: 16px;
+    line-height: 1;
+    transform: translateY(-1px);
+  }
+
+  @media (max-width: 768px) {
+    .btn-back .label { display: none; }
+  }
+
+  /* ---- Section: Center-left — 标题 + 归档时间 ---- */
+  .chrome-title-block {
+    flex: 1 1 auto;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    overflow: hidden;
+  }
+
+  .entry-title {
+    font-family: var(--ff-serif);
+    font-size: 20px;
+    font-weight: 500;
+    line-height: 1.3;
+    color: var(--on-surface);
+    margin: 0;
+    /* single line truncation */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    cursor: text;
+    border-radius: var(--rounded-sm);
+    padding: 1px 4px;
+    margin-left: -4px;
+    transition: background-color 120ms ease;
+  }
+
+  .entry-title:hover {
+    /* Inline edit affordance — Notion-style */
+    background-color: var(--surface-container-low);
+  }
+
+  .entry-meta {
+    font-family: var(--ff-sans);
+    font-size: 12px;
+    font-weight: 400;
+    line-height: 1.4;
+    color: var(--on-surface-variant);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .entry-meta .ts-abs {
+    font-family: var(--ff-mono);
+    font-size: 12px;
+    letter-spacing: 0.02em;
+  }
+
+  /* ---- Section: Center-right — prev / next 导航 ---- */
+  .chrome-nav {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    border: 1px solid var(--outline-variant);
+    border-radius: var(--rounded-default);
+    overflow: hidden;
+  }
+
+  .nav-btn {
+    appearance: none;
+    border: 0;
+    background: transparent;
+    color: var(--on-surface);
+    font-family: var(--ff-sans);
+    font-size: 14px;
+    line-height: 1;
+    padding: 8px 14px;
+    cursor: pointer;
+    transition: background-color 120ms ease, color 120ms ease;
+    user-select: none;
+  }
+
+  .nav-btn:hover {
+    background-color: var(--surface-container-low);
+    color: var(--primary);
+  }
+
+  .nav-btn + .nav-btn {
+    border-left: 1px solid var(--outline-variant);
+  }
+
+  .nav-btn[disabled] {
+    color: var(--outline-variant);
+    cursor: not-allowed;
+  }
+
+  /* ---- Section: Right — ⋯ more menu ---- */
+  .chrome-right {
+    flex: 0 0 auto;
+    position: relative;
+  }
+
+  .btn-more {
+    appearance: none;
+    border: 1px solid var(--outline-variant);
+    background: transparent;
+    color: var(--on-surface);
+    font-family: var(--ff-sans);
+    font-size: 18px;
+    line-height: 1;
+    padding: 7px 12px;
+    border-radius: var(--rounded-default);
+    cursor: pointer;
+    transition: background-color 120ms ease, color 120ms ease,
+                border-color 120ms ease;
+    user-select: none;
+  }
+
+  .btn-more:hover {
+    background-color: var(--surface-container-low);
+    color: var(--primary);
+    border-color: var(--primary);
+  }
+
+  /* More menu dropdown — expanded via :hover/:focus-within on mock,
+     production = click handler. */
+  .more-menu {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    min-width: 220px;
+    background-color: var(--surface-container-lowest);
+    border: 1px solid var(--outline-variant);
+    border-radius: var(--rounded-lg);
+    box-shadow: var(--shadow-menu);
+    padding: 6px;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-4px);
+    transition: opacity 140ms ease, transform 140ms ease, visibility 140ms;
+    z-index: 110;
+  }
+
+  .chrome-right:hover .more-menu,
+  .chrome-right:focus-within .more-menu {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+  }
+
+  /* In dark mode use surface-container for the dropdown bg
+     (lowest === bg so it'd be invisible) */
+  @media (prefers-color-scheme: dark) {
+    .more-menu {
+      background-color: var(--surface-container);
+    }
+  }
+
+  .menu-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    border: 0;
+    background: transparent;
+    color: var(--on-surface);
+    font-family: var(--ff-sans);
+    font-size: 13px;
+    font-weight: 400;
+    line-height: 1.5;
+    text-align: left;
+    padding: 9px 12px;
+    border-radius: var(--rounded-default);
+    cursor: pointer;
+    transition: background-color 100ms ease, color 100ms ease;
+  }
+
+  .menu-item:hover {
+    background-color: var(--surface-container-low);
+  }
+
+  .menu-item .kbd {
+    font-family: var(--ff-mono);
+    font-size: 11px;
+    color: var(--on-surface-variant);
+    letter-spacing: 0.02em;
+  }
+
+  .menu-item.destructive {
+    color: var(--secondary);
+  }
+
+  .menu-item.destructive:hover {
+    background-color: color-mix(in srgb, var(--secondary) 8%, transparent);
+    color: var(--secondary);
+  }
+
+  .menu-divider {
+    height: 1px;
+    background-color: var(--outline-variant);
+    margin: 4px 2px;
+    border: 0;
+  }
+
+  /* =========================================================
+     Render Area — 主体, 占据剩余视口高度
+     ========================================================= */
+  .render-area {
+    /* Top chrome takes 64px; this fills the rest with overflow */
+    min-height: calc(100vh - var(--chrome-h));
+    padding: 32px var(--margin-desktop) 96px;
+    display: flex;
+    justify-content: center;
+  }
+
+  @media (max-width: 768px) {
+    .render-area {
+      padding: 20px var(--margin-mobile) 64px;
+    }
+  }
+
+  /* =========================================================
+     Sandbox Frame — visual indication of sandboxed content
+     生产环境是 <iframe sandbox>。Mock 中用 div 模拟,
+     微浅 inset 边框暗示"这是别人的内容, 沙箱化了"。
+     ========================================================= */
+  .sandbox-frame {
+    width: 100%;
+    max-width: 1200px;
+    background-color: var(--surface-container-lowest);
+    border: 1px solid var(--outline-variant);
+    border-radius: var(--rounded-lg);
+    box-shadow:
+      inset 0 0 0 1px rgba(115, 92, 65, 0.04),
+      var(--shadow-rest);
+    overflow: hidden;
+    /* Subtle visual cue that this is sandboxed user content */
+  }
+
+  @media (max-width: 1024px) {
+    .sandbox-frame { max-width: 1000px; }
+  }
+
+  /* =========================================================
+     Sandboxed User Content — "AI 工具调研单页 v1"
+     刻意与 MindPrint 设计系统不同 — 字体、配色、节奏感
+     都是 alex 自己的 HTML。这兑现 FR-5 "原貌等同性"。
+     ========================================================= */
+  .user-doc {
+    /* alex 自己的 HTML 文档容器 — 用 sans-serif + 不同色板 */
+    font-family: "Inter", "Noto Sans SC", -apple-system, system-ui, sans-serif;
+    color: #1a1a1a;
+    background-color: #ffffff;
+    line-height: 1.7;
+    padding: 64px 72px 80px;
+  }
+
+  @media (max-width: 768px) {
+    .user-doc {
+      padding: 32px 24px 48px;
+    }
+  }
+
+  .user-doc h1 {
+    font-family: "Inter", "Noto Sans SC", sans-serif;
+    font-size: 36px;
+    font-weight: 700;
+    line-height: 1.2;
+    letter-spacing: -0.02em;
+    color: #0a0a0a;
+    margin: 0 0 8px;
+  }
+
+  .user-doc .doc-meta {
+    font-size: 13px;
+    color: #6b7280;
+    margin-bottom: 40px;
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+
+  .user-doc .doc-meta .tag {
+    background-color: #f3f4f6;
+    color: #374151;
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 500;
+  }
+
+  .user-doc .lede {
+    font-size: 18px;
+    line-height: 1.65;
+    color: #374151;
+    margin: 0 0 40px;
+    padding: 20px 24px;
+    background-color: #fafaf9;
+    border-left: 3px solid #f59e0b;
+    border-radius: 0 6px 6px 0;
+  }
+
+  .user-doc h2 {
+    font-family: "Inter", "Noto Sans SC", sans-serif;
+    font-size: 24px;
+    font-weight: 600;
+    line-height: 1.3;
+    letter-spacing: -0.01em;
+    color: #111827;
+    margin: 48px 0 16px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #e5e7eb;
+  }
+
+  .user-doc h3 {
+    font-family: "Inter", "Noto Sans SC", sans-serif;
+    font-size: 18px;
+    font-weight: 600;
+    line-height: 1.4;
+    color: #111827;
+    margin: 28px 0 10px;
+  }
+
+  .user-doc p {
+    font-size: 15px;
+    color: #374151;
+    margin: 0 0 16px;
+  }
+
+  .user-doc ul {
+    padding-left: 22px;
+    margin: 0 0 16px;
+  }
+
+  .user-doc li {
+    font-size: 15px;
+    color: #374151;
+    margin-bottom: 6px;
+  }
+
+  .user-doc strong {
+    color: #0a0a0a;
+    font-weight: 600;
+  }
+
+  .user-doc a {
+    color: #2563eb;
+    text-decoration: none;
+    border-bottom: 1px dotted #93c5fd;
+  }
+
+  .user-doc a:hover {
+    color: #1d4ed8;
+    border-bottom-style: solid;
+  }
+
+  /* alex 自己的表格样式 — 与 MindPrint chrome 形成对比 */
+  .user-doc .compare-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 24px 0 32px;
+    font-size: 14px;
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  .user-doc .compare-table thead {
+    background-color: #f9fafb;
+  }
+
+  .user-doc .compare-table th {
+    text-align: left;
+    padding: 12px 14px;
+    font-weight: 600;
+    color: #111827;
+    font-size: 13px;
+    border-bottom: 1px solid #e5e7eb;
+  }
+
+  .user-doc .compare-table td {
+    padding: 12px 14px;
+    border-bottom: 1px solid #f3f4f6;
+    color: #374151;
+    vertical-align: top;
+  }
+
+  .user-doc .compare-table tbody tr:last-child td {
+    border-bottom: 0;
+  }
+
+  .user-doc .compare-table tbody tr:hover {
+    background-color: #fafaf9;
+  }
+
+  .user-doc .score {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-weight: 600;
+    color: #0a0a0a;
+  }
+
+  .user-doc .score.high { color: #16a34a; }
+  .user-doc .score.mid { color: #ca8a04; }
+  .user-doc .score.low { color: #dc2626; }
+
+  .user-doc .conclusion {
+    margin-top: 56px;
+    padding: 28px 32px;
+    background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+    border-radius: 12px;
+    border: 1px solid #fcd34d;
+  }
+
+  .user-doc .conclusion h2 {
+    border-bottom: 0;
+    margin-top: 0;
+    padding-bottom: 0;
+    color: #78350f;
+  }
+
+  .user-doc .conclusion p {
+    color: #78350f;
+    margin-bottom: 8px;
+  }
+
+  .user-doc .conclusion p:last-child {
+    margin-bottom: 0;
+  }
+
+  .user-doc .doc-footer {
+    margin-top: 48px;
+    padding-top: 20px;
+    border-top: 1px solid #e5e7eb;
+    font-size: 12px;
+    color: #9ca3af;
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  /* =========================================================
+     Reduced motion — kill animations
+     ========================================================= */
+  @media (prefers-reduced-motion: reduce) {
+    .btn-back, .nav-btn, .btn-more, .entry-title,
+    .more-menu, .menu-item {
+      transition: none;
+    }
+    html { scroll-behavior: auto; }
+  }
+
+  /* =========================================================
+     Visually hidden — for SR-only
+     ========================================================= */
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+</style>
+</head>
+
+<body>
+
+  <!-- ============================================================
+       Top Chrome (Full Render) — sticky 顶部纸条
+       结构: ← 返回 / 标题 + 归档时间 / ⟨ ⟩ / ⋯
+       ============================================================ -->
+  <header class="top-chrome" role="banner" aria-label="Entry 导航与操作">
+
+    <!-- Left: ← 返回时间线 -->
+    <div class="chrome-left">
+      <a class="btn-back" href="#" aria-label="返回时间线">
+        <span class="arrow" aria-hidden="true">&larr;</span>
+        <span class="label">返回时间线</span>
+      </a>
+    </div>
+
+    <!-- Center-left: 标题 + 归档时间 (single line truncation) -->
+    <div class="chrome-title-block">
+      <h1 class="entry-title"
+          title="AI 工具调研单页 v1 — 单击进入编辑模式"
+          tabindex="0">
+        AI 工具调研单页 v1
+      </h1>
+      <span class="entry-meta">
+        归档于 <span class="ts-abs">2026 年 4 月 18 日 16:22</span>
+      </span>
+    </div>
+
+    <!-- Center-right: ⟨ ⟩ 上一·下一 Entry 导航 -->
+    <nav class="chrome-nav" role="group" aria-label="Entry 导航">
+      <button type="button"
+              class="nav-btn"
+              aria-label="上一条 Entry (键盘 ←)"
+              title="上一条 ←">
+        &#10216;
+      </button>
+      <button type="button"
+              class="nav-btn"
+              aria-label="下一条 Entry (键盘 →)"
+              title="下一条 →">
+        &#10217;
+      </button>
+    </nav>
+
+    <!-- Right: ⋯ More menu (默认收起, hover 演示展开态) -->
+    <div class="chrome-right">
+      <button type="button"
+              class="btn-more"
+              aria-label="更多操作"
+              aria-haspopup="menu"
+              aria-expanded="false"
+              title="更多操作">
+        &middot;&middot;&middot;
+      </button>
+
+      <!--
+        More Menu dropdown — EXPERIENCE.md.Component Patterns > More Menu (⋯)
+        所有 FR-7 管理动作的唯一入口:
+          · 编辑标题 (inline edit)
+          · 下载原 .html (签名 URL + 短时效)
+          · 删除 (destructive — 衰红色, 触发确认 modal)
+        本 mock 中通过 :hover 演示展开态。
+      -->
+      <div class="more-menu" role="menu" aria-label="Entry 操作菜单">
+        <button type="button" class="menu-item" role="menuitem">
+          <span>编辑标题</span>
+          <span class="kbd">单击标题</span>
+        </button>
+        <button type="button" class="menu-item" role="menuitem">
+          <span>下载原 .html</span>
+          <span class="kbd">.html</span>
+        </button>
+        <hr class="menu-divider" />
+        <button type="button" class="menu-item destructive" role="menuitem">
+          <span>删除</span>
+          <span class="kbd">无法恢复</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ============================================================
+       Render Area — 主体, 占据剩余视口
+       ============================================================ -->
+  <main class="render-area" role="main" aria-label="Entry 内容">
+
+    <!--
+      Sandbox Frame — 生产环境 = <iframe sandbox>
+      Mock 中是 styled div, 视觉上微浅 inset 边框暗示沙箱边界。
+      内部内容刻意采用 sans-serif + 不同色板 + 不同节奏感,
+      与 MindPrint chrome 形成对比, 强调 "这是 alex 自己的内容" —
+      兑现 FR-5 原貌等同性 (visual equivalence) 承诺。
+    -->
+    <article class="sandbox-frame"
+             role="document"
+             aria-label="AI 工具调研单页 v1 内容">
+
+      <div class="user-doc">
+
+        <h1>AI 工具调研单页 v1</h1>
+
+        <div class="doc-meta">
+          <span class="tag">调研</span>
+          <span class="tag">AI 工具</span>
+          <span class="tag">v1</span>
+          <span>2026 年 4 月 · 整理人: alex</span>
+        </div>
+
+        <p class="lede">
+          本文整理了截至 2026 年 Q1 我个人使用 / 试用过的 6 款 AI 编码工具的
+          实际体验。所有评分基于真实使用场景, 不是 marketing benchmark。
+          目标是给自己留一份选型记忆, 半年后回看时知道当时为什么做了那个决定。
+        </p>
+
+        <h2>1. 评测维度</h2>
+        <p>
+          为了避免"凭感觉打分", 我把使用体验拆成 4 个可观测维度:
+        </p>
+        <ul>
+          <li><strong>代码生成准确度</strong>——在不调试的前提下, 生成代码能直接跑的比例。</li>
+          <li><strong>上下文理解</strong>——给一个跨多个文件的重构任务, 工具能否抓住完整意图。</li>
+          <li><strong>对话节奏</strong>——是否需要反复 prompt engineering, 还是能"一次说清就办妥"。</li>
+          <li><strong>价格 / 速度</strong>——日常工作流中, 等待时间和月费的综合性价比。</li>
+        </ul>
+
+        <h2>2. 对比结果</h2>
+        <p>
+          下表是 6 款工具在上述 4 个维度的实测打分 (满分 10, 仅代表 alex 个人体验):
+        </p>
+
+        <table class="compare-table">
+          <thead>
+            <tr>
+              <th>工具</th>
+              <th>代码生成准确度</th>
+              <th>上下文理解</th>
+              <th>对话节奏</th>
+              <th>价格 / 速度</th>
+              <th>综合</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Claude Code</strong></td>
+              <td><span class="score high">9.2</span></td>
+              <td><span class="score high">9.5</span></td>
+              <td><span class="score high">9.0</span></td>
+              <td><span class="score mid">7.5</span></td>
+              <td><span class="score high">8.8</span></td>
+            </tr>
+            <tr>
+              <td><strong>Cursor</strong></td>
+              <td><span class="score high">8.8</span></td>
+              <td><span class="score high">8.5</span></td>
+              <td><span class="score high">9.2</span></td>
+              <td><span class="score high">8.5</span></td>
+              <td><span class="score high">8.7</span></td>
+            </tr>
+            <tr>
+              <td>GitHub Copilot</td>
+              <td><span class="score mid">7.5</span></td>
+              <td><span class="score mid">6.8</span></td>
+              <td><span class="score mid">7.0</span></td>
+              <td><span class="score high">9.0</span></td>
+              <td><span class="score mid">7.6</span></td>
+            </tr>
+            <tr>
+              <td>Windsurf</td>
+              <td><span class="score mid">7.8</span></td>
+              <td><span class="score mid">7.5</span></td>
+              <td><span class="score mid">7.5</span></td>
+              <td><span class="score high">8.2</span></td>
+              <td><span class="score mid">7.8</span></td>
+            </tr>
+            <tr>
+              <td>Aider</td>
+              <td><span class="score mid">7.0</span></td>
+              <td><span class="score mid">7.2</span></td>
+              <td><span class="score low">5.5</span></td>
+              <td><span class="score high">9.5</span></td>
+              <td><span class="score mid">7.3</span></td>
+            </tr>
+            <tr>
+              <td>Continue</td>
+              <td><span class="score mid">6.5</span></td>
+              <td><span class="score low">5.8</span></td>
+              <td><span class="score low">5.2</span></td>
+              <td><span class="score high">9.0</span></td>
+              <td><span class="score mid">6.6</span></td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h2>3. 关键观察</h2>
+
+        <h3>3.1 上下文窗口不等于上下文理解</h3>
+        <p>
+          长上下文窗口在 2025-2026 是营销显学, 但实测下来,
+          <strong>能塞进去 ≠ 能用上</strong>。Claude Code 在跨 8-10 个
+          文件的重构任务上表现最稳, 不是因为它"看得多", 而是因为它知道
+          <em>哪些可以忽略</em>。
+        </p>
+
+        <h3>3.2 "agentic" 模式的真实价值</h3>
+        <p>
+          Cursor 的 Composer 和 Claude Code 的 agentic 流程都对了, 不是因为
+          自动跑代码这件事本身有多神奇, 而是因为它们把
+          <strong>"读 → 改 → 验证"的循环</strong>从人工搬到了机器侧。
+          对小任务节省 30%, 对跨文件任务节省 60% 以上。
+        </p>
+
+        <h3>3.3 价格不是首要因素</h3>
+        <p>
+          实测下来, Aider + 自带 API key 的方案确实便宜, 但<strong>节奏感的损失</strong>
+          抵消了大部分价格优势。对我的个人项目来说, 月费 $20 vs $40
+          的差别远不如"等 8 秒 vs 等 30 秒"的差别重要。
+        </p>
+
+        <h2>4. 个人选型</h2>
+        <p>
+          截至本文整理时 (2026-04), 我的工作流是:
+        </p>
+        <ul>
+          <li><strong>主力</strong>: Claude Code (用于长任务、跨文件重构、复杂调试)</li>
+          <li><strong>编辑器内</strong>: Cursor (日常写代码 + 单文件改动)</li>
+          <li><strong>移动 / 远程</strong>: 直接用 Claude.ai 网页版</li>
+        </ul>
+        <p>
+          Copilot 已停订半年, Windsurf / Aider / Continue 留在观察名单,
+          但暂不进入日常。下次复盘节点: 2026 年 Q3 末。
+        </p>
+
+        <div class="conclusion">
+          <h2>结论</h2>
+          <p>
+            <strong>当前阶段对个人项目而言, Claude Code + Cursor 双工具组合是最优解。</strong>
+            其他工具不是不好, 而是<em>不必要</em>——多一个工具就多一份切换成本,
+            而切换本身没有产生新的能力。
+          </p>
+          <p>
+            这份调研的最大收获不是工具选型, 而是<strong>"对话节奏"这个维度被显式化</strong>。
+            它过去是我打分的隐性变量, 现在变成显性指标——
+            下次评估新工具时, 这是我第一个测的事。
+          </p>
+        </div>
+
+        <div class="doc-footer">
+          <span>整理: alex · 2026 年 4 月 18 日</span>
+          <span>下次复盘: 2026 年 Q3 末</span>
+        </div>
+
+      </div>
+
+    </article>
+  </main>
+
+</body>
+</html>

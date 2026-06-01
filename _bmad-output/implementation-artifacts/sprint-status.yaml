@@ -1,0 +1,80 @@
+# ════════════════════════════════════════════════════════════════════
+# Sprint Status — MindPrint (my-bmad-app)
+# ════════════════════════════════════════════════════════════════════
+# generated: 2026-05-29
+# last_updated: 2026-05-29
+# project: my-bmad-app
+# project_key: NOKEY
+# tracking_system: file-system
+# story_location: /Users/alex/Developer/个人项目/实验/my-bmad-app/_bmad-output/implementation-artifacts
+#
+# ── 状态定义 (STATUS DEFINITIONS) ───────────────────────────────────
+# Epic 状态:
+#   - backlog:      Epic 尚未启动
+#   - in-progress:  Epic 进行中（正在创建 / 实现其下的 story）
+#   - done:         Epic 下所有 story 已完成
+#
+# Epic 状态流转:
+#   - backlog → in-progress: 创建该 epic 第一个 story 时自动触发 (via create-story)
+#   - in-progress → done:    该 epic 所有 story 到达 'done' 后手动标记
+#
+# Story 状态:
+#   - backlog:        Story 仅存在于 epic 文件中（尚未生成 story 文件）
+#   - ready-for-dev:  Story 文件已在 implementation-artifacts 下创建
+#   - in-progress:    开发者正在实现
+#   - review:         待代码评审 (via dev 的 code-review workflow)
+#   - done:           Story 已完成
+#
+# Retrospective 状态:
+#   - optional:  可进行但非必须
+#   - done:      复盘已完成
+#
+# ── 工作流说明 (WORKFLOW NOTES) ─────────────────────────────────────
+# - 创建某 epic 第一个 story 时，该 epic 自动转为 'in-progress'
+# - 团队产能允许时多个 story 可并行推进
+# - 通常在上一个 story 'done' 后再创建下一个，以吸收其实现经验
+# - dev 将 story 移到 'review'，再跑 code-review（建议全新上下文 / 不同 LLM）
+# - 重跑 sprint-planning 会刷新自动检测的状态（已推进的状态不会被回退）
+# ════════════════════════════════════════════════════════════════════
+
+generated: 2026-05-29
+last_updated: 2026-06-01
+project: my-bmad-app
+project_key: NOKEY
+tracking_system: file-system
+story_location: /Users/alex/Developer/个人项目/实验/my-bmad-app/_bmad-output/implementation-artifacts
+
+development_status:
+  # ── Epic 1: 私人空间（Foundation & Private Access）· FR-6 · 5 stories ──
+  epic-1: in-progress
+  1-1-项目初始化-原型代码平移: done
+  1-2-数据层基础drizzle-5-表-schema-typed-env: done
+  1-3-认证基线authjs-magic-link-middleware-三个-auth-页面: review
+  1-4-视觉系统tailwind-tokens-字体加载-暗色模式-empty-state: backlog
+  1-5-首次云部署vercel-vercelapp-子域: backlog
+  epic-1-retrospective: optional
+
+  # ── Epic 2: 归档第一份 Entry（First Archive）· FR-1/2/3/5 · 3 stories ──
+  epic-2: backlog
+  2-1-r2-存储基础bucket-iam-s3-sdk-helper: backlog
+  2-2-归档链路dropzone-archivemodal-archiveentry-server-action: backlog
+  2-3-full-render-基础-归档跳转衔接: backlog
+  epic-2-retrospective: optional
+
+  # ── Epic 3: 时间线浏览与思维演进回看（Browse Timeline）· FR-4/5 · 5 stories ──
+  epic-3: backlog
+  3-1-时间线主屏-skeleton: backlog
+  3-2-卡片网格entrycard-monthdivider-thumbnailiframe: backlog
+  3-3-排序切换sorttoggle-url-state: backlog
+  3-4-full-render-完整导航上一下一-键盘: backlog
+  3-5-响应式断点-移动端退化: backlog
+  epic-3-retrospective: optional
+
+  # ── Epic 4: Entry 管理 + 上线就绪（Entry Management & Production Readiness）· FR-7 · 5 stories ──
+  epic-4: backlog
+  4-1-编辑标题inline-editor-updateentrytitle-moremenu-框架: backlog
+  4-2-下载原-html: backlog
+  4-3-永久删除confirmdeletedialog-deleteentry: backlog
+  4-4-部署强化自定义域名-github-actions-ci-vercel-analytics: backlog
+  4-5-备份兜底-上线文档-eslint-自定义规则: backlog
+  epic-4-retrospective: optional
