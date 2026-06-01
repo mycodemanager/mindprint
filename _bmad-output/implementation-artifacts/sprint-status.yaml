@@ -49,7 +49,7 @@ development_status:
   epic-1: in-progress
   1-1-项目初始化-原型代码平移: done
   1-2-数据层基础drizzle-5-表-schema-typed-env: done
-  1-3-认证基线authjs-magic-link-middleware-三个-auth-页面: review
+  1-3-认证基线authjs-magic-link-middleware-三个-auth-页面: done
   1-4-视觉系统tailwind-tokens-字体加载-暗色模式-empty-state: backlog
   1-5-首次云部署vercel-vercelapp-子域: backlog
   epic-1-retrospective: optional

@@ -4,7 +4,7 @@ baseline_commit: 9c9c432ebdab47727716d9be3f1df7be75f9c422
 
 # Story 1.3: 认证基线（Auth.js + Magic Link + middleware + 三个 auth 页面）
 
-Status: review
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -390,6 +390,26 @@ Claude Opus 4.8（`claude-opus-4-8`，1M context）
 
 **未做（范围纪律）：** 不引入测试框架（架构 defer，验收=tsc+lint+人工 e2e）；不实现 `NEXT_PUBLIC_DEV_AUTH_BYPASS`；不为 `requireAlex()` 造业务路由；不引入 DESIGN.md 视觉 tokens（Story 1.4）；未装可选 `react-email` CLI。
 
+### 代码评审处置（Codex 独立审 · 2026-06-01）
+
+Codex（独立 LLM，喂自包含评审包 `story-1.3-code-review-packet.md`）提出 7 条，全部 triage 并修复 / 接受。修复后 `tsc` / `eslint` / `next build`（Turbopack）/ server-only 边界 grep 全绿。
+
+| # | 发现（严重度） | 判定 | 处置 |
+|---|---|---|---|
+| 1 | `callbacks.signIn` 返回 `false` → `/auth/error`，成员身份 oracle（高） | 接受 | 改 `return '/auth/verify-request'`。核 `@auth/core/lib/actions/signin/send-token.js`：回调在发信前触发，返回字符串即短路重定向、**不发信不写 token**，与白名单成功路径同落 verify-request |
+| 2 | 邮箱归一化不一致，大小写可锁死合法用户（中-高） | 接受 | `env.ALLOWED_EMAIL` 收紧为 `trim().toLowerCase().pipe(z.email())`；新建 `lib/auth/allowlist.ts` 的 `isAllowedEmail()`，signin Server Action / `callbacks.signIn` / `requireAlex()` 三处共用 |
+| 3 | proxy 仅查 cookie 存在性，非真鉴权（高；当前无私有页，实际风险低） | 部分接受（设计取舍） | 保持乐观 cookie 校验（Next 16 官方 + 故事方案 A）；经 #5 让 `/api` 回 401；proxy 顶部注释明确「非安全边界」。**权威鉴权 = `requireAlex()`**；**遗留**：Epic 2 首个私有页须置于调用 `requireAlex()` 的受保护 layout 之下 |
+| 4 | `trustHost:true` + 未固定 canonical URL → Magic Link host 投毒（高，部署前必修） | 接受 | `sendVerificationRequest` 发信前校验 `new URL(url).origin === env.AUTH_URL`（设了才校验，dev 跳过）；env 新增 `AUTH_URL`（optional）。**遗留**：Story 1.5 收紧 `AUTH_URL` 为必需 + 关 `trustHost` |
+| 5 | matcher 不符 NFR-2；`startsWith('/auth')` 过宽（中） | 接受 | proxy 改精确前缀判断（`/auth`、`/auth/`、`/api/auth`、`/api`），`/api/*` 无 session → **401 空 body**（非 302）；matcher 仅排除静态资源 |
+| 6 | error 页把所有错误说成「不在允许列表」（中） | 接受 | 改通用文案「无法完成登录。」「登录链接可能已失效或已被使用。请返回重新发送 Magic Link。」；具体原因只进日志（取代上方 Debug Log 引用的旧文案） |
+| 7 | server-only 仅靠注释（低-中） | 接受 | `lib/env.ts`、`lib/auth/config.ts`、`lib/auth/require-alex.ts`、`lib/auth/allowlist.ts` 顶部加 `import 'server-only'`（Next 16 内置别名解析；client bundle 误 import 即编译期报错） |
+
+**遗留追踪（不阻塞本 Story）：** (a) Epic 2 受保护 layout + `requireAlex()`；(b) Story 1.5 `AUTH_URL` 必需 + 关 `trustHost`；(c) `lib/db/client.ts` 亦可补 `import 'server-only'`（属 1.2 文件，未纳入本次范围）。
+
+**#1 残留（可接受）：** 直接 POST `/api/auth/signin/resend` 时，白名单成功路径会多一跳内部 `/api/auth/verify-request`，与非白名单的直接 verify-request 在「原始 HTTP 重定向链 / 发信耗时」上仍有微弱差异；浏览器层面行为一致，单用户应用可接受，未额外加固。
+
+**复核验证（2026-06-01）：** `npm run typecheck` ✅；`npm run lint` ✅；`npm run build`（Turbopack，7 页生成，Proxy 识别）✅；全树 `'use client'` 仅 3 个（`components/ArchiveModal|Dropzone|SortToggle`），均**未** import 任何 server-only 模块（`config`/`env`/`allowlist`/`require-alex`），build 二次背书 ✅。
+
 ### File List
 
 **新建（路径相对 repo 根 = `web/`）：**
@@ -397,6 +417,7 @@ Claude Opus 4.8（`claude-opus-4-8`，1M context）
 - `web/lib/auth/config.ts` —— 完整配置（adapter + Resend provider + session + 白名单 callback）
 - `web/lib/auth/magic-link-email.tsx` —— React Email Magic Link 模板
 - `web/lib/auth/require-alex.ts` —— NFR-2 API 层守卫
+- `web/lib/auth/allowlist.ts` —— 白名单判定单一入口 `isAllowedEmail()`（code-review F2，server-only）
 - `web/app/api/auth/[...nextauth]/route.ts` —— Auth.js catch-all route handler
 - `web/app/auth/signin/page.tsx` —— 登录页 + Server Action（含 AC11 前置白名单校验）
 - `web/app/auth/verify-request/page.tsx` —— Magic Link 已发送提示页
@@ -404,8 +425,8 @@ Claude Opus 4.8（`claude-opus-4-8`，1M context）
 - `web/proxy.ts` —— 应用层门卫（**故事原称 middleware.ts**；Next 16 重命名为 proxy）
 
 **修改：**
-- `web/lib/env.ts` —— AUTH_SECRET / AUTH_RESEND_KEY / ALLOWED_EMAIL 收紧为必需（`.trim().min(1)`）
-- `web/.env.example` —— AUTH_* 现为必需 + AUTH_URL/NEXTAUTH_URL 说明
+- `web/lib/env.ts` —— AUTH_SECRET / AUTH_RESEND_KEY 收紧为必需（`.trim().min(1)`）；ALLOWED_EMAIL 归一化 `trim+lowercase+z.email()`（F2）；新增 `AUTH_URL`（optional，F4）；顶部加 `import 'server-only'`（F7）
+- `web/.env.example` —— AUTH_* 现为必需；`NEXTAUTH_URL` → `AUTH_URL`（F4，含 host 投毒说明）
 - `web/package.json` —— 新增 5 个认证依赖；next-auth 精确锁定 `5.0.0-beta.31`（去 caret）
 - `web/package-lock.json` —— 依赖安装产生的 lockfile 更新
 
@@ -415,3 +436,4 @@ Claude Opus 4.8（`claude-opus-4-8`，1M context）
 |---|---|---|
 | 2026-06-01 | Story 1.3 实现完成（dev-story） | Auth.js v5 + Magic Link + proxy 门卫 + 三个 auth 页面；typed env 收紧。关键偏差：Next 16 下 `middleware.ts`→`proxy.ts`（Node runtime，split-config edge 顾虑消解，采用 cookie 乐观校验门卫）；AC11 在 Server Action 前置白名单校验以统一跳 verify-request。自动化质量门（tsc/lint/grep/dev 烟测）全绿；真实发信+点链接的端到端实测待 alex。 |
 | 2026-06-01 | alex 端到端实测通过（AC10 确认） | 真实 Magic Link 登录 happy path 验证成功：点邮件链接 → 建立 30 天 database session → 跳回 `/`（当前为 Next 脚手架占位首页，符合预期；真正首页见 Story 3.1，视觉系统见 Story 1.4）。Story 移交 code-review。 |
+| 2026-06-01 | Code review（Codex 独立审）问题修复 | 7 条全部 triage：#1 signIn 改返回字符串消除成员身份 oracle；#2 邮箱归一化 + `isAllowedEmail()` 单一入口（新增 `lib/auth/allowlist.ts`）；#4 发信前校验 magic-link origin 防 host 投毒（新增 `AUTH_URL`）；#5 proxy 精确路径 + `/api` 回 401；#6 error 页改通用文案；#7 4 个服务端模块加 `import 'server-only'`；#3 设计取舍（保持乐观 proxy + `requireAlex()` 权威，遗留 Epic 2 受保护 layout）。`tsc`/`lint`/`build`/server-only grep 全绿。待 alex 决定 `done` 或复审。 |

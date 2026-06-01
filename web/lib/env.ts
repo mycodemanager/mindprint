@@ -6,6 +6,7 @@
 // 必需 / 可选策略（Story 1.2 决策）：变量随对应 Story 收紧为必需 —— 避免尚未配置的变量
 // 提前触发 dev/build fail-fast。每个可选变量旁标注「何时收紧」。
 // Story 1.3 已收紧：AUTH_SECRET / AUTH_RESEND_KEY / ALLOWED_EMAIL（认证基线必需）。
+import 'server-only';
 import { z } from 'zod';
 
 const EnvSchema = z.object({
@@ -22,15 +23,19 @@ const EnvSchema = z.object({
     .string()
     .trim()
     .min(1, 'AUTH_RESEND_KEY 不能为空（Resend API key，Magic Link 发信）'),
+  // 归一化为 trim+lowercase 并校验邮箱格式，与 Auth.js email-provider 的 normalizer 对齐，
+  // 避免大小写不一致把白名单用户锁死（code-review F2）。三处比较统一走 lib/auth/allowlist.ts。
   ALLOWED_EMAIL: z
     .string()
     .trim()
-    .min(1, 'ALLOWED_EMAIL 不能为空（NFR-2 单用户白名单，填 alex 的邮箱）'),
+    .toLowerCase()
+    .pipe(z.email('ALLOWED_EMAIL 必须是合法邮箱（NFR-2 单用户白名单，填 alex 的邮箱）')),
 
-  // ── 部署 —— Story 1.5 收紧为必需 ──
-  // ⚠️ Auth.js v5 实际读 `AUTH_URL`（v4 才是 `NEXTAUTH_URL`）。本 Story 用 `trustHost: true`
-  //    从请求头推断 URL，故此变量保持 optional；URL 变量命名留到 Story 1.5 部署时决策。
-  NEXTAUTH_URL: z.string().optional(),
+  // ── 部署 canonical URL —— Story 1.5 收紧为必需 ──
+  // Auth.js v5 读 process.env.AUTH_URL（v4 才是 NEXTAUTH_URL）。本 Story 用 `trustHost: true`
+  //    从请求头推断，故此变量 optional。一旦设置，sendVerificationRequest 会据此校验 magic-link 的
+  //    origin，防 Host header 投毒（code-review F4）。Story 1.5 收紧为必需 + 关 trustHost。
+  AUTH_URL: z.string().url().optional(),
 
   // ── Cloudflare R2 对象存储 —— Epic 2 收紧为必需 ──
   R2_ACCOUNT_ID: z.string().optional(),

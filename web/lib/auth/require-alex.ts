@@ -6,13 +6,14 @@
 //
 // ⚠️ server-only：import auth()（→ db / env），禁止被任何 'use client' 组件 import。
 // 本 Story 仅建立此守卫，不创建任何业务路由（范围纪律）。
+import 'server-only';
 import type { Session } from 'next-auth';
 import { auth } from '@/lib/auth/config';
-import { env } from '@/lib/env';
+import { isAllowedEmail } from '@/lib/auth/allowlist';
 
 export async function requireAlex(): Promise<Session> {
   const session = await auth();
-  if (!session || session.user?.email !== env.ALLOWED_EMAIL) {
+  if (!session || !isAllowedEmail(session.user?.email)) {
     throw new Error('UNAUTHORIZED');
   }
   return session;

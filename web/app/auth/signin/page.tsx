@@ -3,7 +3,7 @@
 // ⚠️ 视觉系统属 Story 1.4；此处仅极简语义结构 + 基础布局，不引入 DESIGN.md tokens。
 import { redirect } from 'next/navigation';
 import { signIn } from '@/lib/auth/config';
-import { env } from '@/lib/env';
+import { isAllowedEmail } from '@/lib/auth/allowlist';
 
 export default function SignInPage() {
   async function sendMagicLink(formData: FormData) {
@@ -14,8 +14,8 @@ export default function SignInPage() {
 
     // 白名单前置校验（AC11）：非白名单 → 不调 signIn（不发信、不写 token），统一跳 verify-request。
     // 这样无论邮箱是否在白名单，UI 都走向 verify-request，不泄露成员身份；
-    // 真正的发信前拦截另由 callbacks.signIn 兜底（lib/auth/config.ts）。
-    if (!email || email !== env.ALLOWED_EMAIL) {
+    // 真正的发信前拦截另由 callbacks.signIn 兜底（lib/auth/config.ts，同样落到 verify-request）。
+    if (!isAllowedEmail(email)) {
       console.log('[auth] sign-in rejected (not allowlisted)');
       redirect('/auth/verify-request');
     }
