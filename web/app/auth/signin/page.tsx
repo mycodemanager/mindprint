@@ -20,8 +20,12 @@ export default function SignInPage() {
       redirect('/auth/verify-request');
     }
 
-    // 白名单：发 Magic Link；signIn 成功后由 Auth.js 跳到 verifyRequest 页（pages 配置）。
-    await signIn('resend', { email, redirectTo: '/' });
+    // 白名单：发 Magic Link。⚠️ next-auth(beta)+Next16 下，默认会把发信后跳转打到无效的
+    //   /api/auth/verify-request（UnknownAction，见 GitHub nextauthjs/next-auth#11101）。故用
+    //   redirect:false 关掉默认跳转，邮件照发，再由我们显式跳到自定义 verify-request 页。
+    //   仅修「发信后导航」——不动 signIn callback / allowlist / sendVerificationRequest 任何鉴权语义（1.3 红线）。
+    await signIn('resend', { email, redirectTo: '/', redirect: false });
+    redirect('/auth/verify-request');
   }
 
   return (

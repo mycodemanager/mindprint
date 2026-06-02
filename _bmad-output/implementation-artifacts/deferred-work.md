@@ -17,3 +17,9 @@
 
 - **CJK 衬线非 Mac 兜底未自托管（偏差 2「遗留」）**：当前 `Noto_Serif_SC` / `Noto_Sans_SC` 走 `next/font/google` + `preload:false`，仅作非 Mac 网络兜底；alex 的 Mac 由系统 Songti SC / PingFang SC 渲染衬线（V1 验收点）。若日后要在非 Mac 上稳定呈现编辑衬线 CJK 且不发数 MB —— 改用 `next/font/local` 自托管**子集化** `.woff2`（pyftsubset 取常用汉字集 + `unicode-range`），变量名沿用 `--font-noto-serif-sc` / `--font-noto-sans-sc` 即可零改 `globals.css`。 → **Epic 3+ / 优化阶段**。`web/app/layout.tsx`
 - **构建期依赖 fonts.gstatic.com（next/font CJK 下载脆弱）**：`next/font/google` 在 `next build` 时下载并自托管字体；CJK 变体字体有数十个 unicode-range 分块，本机构建实测对 gstatic 连接抖动敏感（需重试数次才全绿）。Vercel 构建网络可靠故不阻塞；但 **GitHub Actions CI（Story 4.4）若网络受限可能偶发失败**。自托管子集（见上一条）可彻底消除此构建期网络依赖。 → **Story 4.4**（CI 落地时评估）。`web/app/layout.tsx`
+
+## Deferred from: dev/deploy of 1-5-首次云部署vercel-vercelapp-子域 (2026-06-02)
+
+- **1.3-F4 已消化（含更正，非延后）**：F4 原写「AUTH_URL 必需 **+ 关闭 trustHost**」。本 Story 落实 `AUTH_URL` 生产必需（`env.ts` superRefine，按 `VERCEL_ENV`），但**保留 `trustHost: true`**——核 installed `@auth/core` 源码（`lib/utils/env.js:40` 自动推断 / `lib/utils/assert.js:56` falsy→UntrustedHost）：Vercel 下关闭 trustHost 只会触发 `UntrustedHost`、且不增任何防投毒能力，防护由 `AUTH_URL` + `config.ts:33` origin 断言提供。故 F4 真实目标（防 Host 投毒）已达成，「关 trustHost」系误导。✅ 闭环。`web/lib/env.ts` / `web/lib/auth/auth.config.ts`
+- **magic link 一次性 token 被邮件扫描器预取消费**：生产首测发现回调被命中两次（成功 1 次 + 12s 后 `Verification` 失败 1 次）—— Gmail/邮件客户端对链接做 GET 预取会消费一次性 token。本次 alex 真实点击恰为第一次故登录成功；但若扫描器抢先，会偶发「点了登不上」。健壮修法：magic link 落到「点击确认」中间页（仅 POST 消费 token，GET 预取不消费）。 → **follow-up（建议 Story 4.4 auth 强化时）**。`web/lib/auth/config.ts` / 新增确认页
+- **（已修，记录备查）发信后跳转打到 `/api/auth/verify-request`（`UnknownAction`，next-auth #11101）**：next-auth(beta)+Next 16 默认把发信后跳转打到无效 API 动作 → 错误页。本 Story 已在 signin 页改 `signIn(..., { redirect:false })` + 显式 `redirect('/auth/verify-request')` 修复（不动鉴权语义）。✅ `web/app/auth/signin/page.tsx`

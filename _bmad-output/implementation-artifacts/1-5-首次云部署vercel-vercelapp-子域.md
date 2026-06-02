@@ -4,7 +4,7 @@ baseline_commit: 1040cbfe7982390c18232e21b22bc733ed15387e
 
 # Story 1.5: 首次云部署（Vercel + vercel.app 子域）
 
-Status: in-progress
+Status: review
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -72,12 +72,12 @@ so that 我能在任意设备的浏览器上通过 HTTPS 登录我的私人 Mind
   - [x] 产出部署操作手册（建议 `web/DEPLOY.md` 或本 story 内「部署 Runbook」即可）—— 含 Neon production branch、Resend、Vercel 项目 + 三套 env、首次部署、多设备验证的**逐步精确步骤**（见下方 Dev Notes 已起草，dev 校订并落盘）。
 - [x] **Task 5 — 构建自检（[dev]，AC: 5,8）**
   - [x] `npm run typecheck && npm run lint` 全绿；`next build` 通过（本机若卡 gstatic 抖动属环境问题，记录即可——Vercel 首次生产构建为权威验证）。
-- [ ] **Task 6 — Vercel/Neon/Resend 配置与首次部署（[ops·alex]，AC: 1,2,3,4）**
-  - [ ] 按 runbook：Neon 建/确认 production branch 并 `drizzle-kit push` 5 表；Resend 取 API key 并确认账号邮箱 = `ALLOWED_EMAIL`；Vercel 建项目（Root=`web/`）+ 配三套 env（含 `AUTH_URL` = 生产子域）；`git push origin main` 触发生产构建。
-- [ ] **Task 7 — 端到端 + 多设备验收（[ops·alex]，AC: 6,7,9）**
-  - [ ] macOS Chrome 全链路登录；iPhone Safari 同时登录（不顶 Mac）；查 Vercel logs 无异常、有 `[auth]` 日志；确认明/暗与响应式。
-- [ ] **Task 8 — 收尾（[dev]，AC: all）**
-  - [ ] 填写 Dev Agent Record + File List + Change Log；记录最终 deployment URL（`AUTH_URL` 取值）与多设备验收结果。
+- [x] **Task 6 — Vercel/Neon/Resend 配置与首次部署（[ops·alex]，AC: 1,2,3,4）**
+  - [x] 按 runbook：Neon 建/确认 production branch 并 `drizzle-kit push` 5 表；Resend 取 API key 并确认账号邮箱 = `ALLOWED_EMAIL`；Vercel 建项目（Root=`web/`）+ 配三套 env（含 `AUTH_URL` = 生产子域）；`git push origin main` 触发生产构建。
+- [x] **Task 7 — 端到端 + 多设备验收（[ops·alex]，AC: 6,7,9）**
+  - [x] macOS Chrome 全链路登录；iPhone Safari 同时登录（不顶 Mac）；查 Vercel logs 无异常、有 `[auth]` 日志；确认明/暗与响应式。（AC9 残留：邮件扫描器预取致一次性 token 偶发 `Verification`，已记 deferred-work follow-up；`UnknownAction` 发信后跳转已在本 Story 修复。）
+- [x] **Task 8 — 收尾（[dev]，AC: all）**
+  - [x] 填写 Dev Agent Record + File List + Change Log；记录最终 deployment URL（`AUTH_URL` 取值）与多设备验收结果。
 
 ## Dev Notes
 
@@ -217,22 +217,30 @@ Claude Opus 4.8 (1M context) — dev-story workflow
 - ✅ **Task 4（AC1/2/3/6/7）**：落盘 `web/DEPLOY.md` 部署 runbook（Neon→Resend→Vercel→回填 AUTH_URL→验收 的逐步精确步骤 + 常见坑 + 范围边界）。
 - ✅ **Task 5（AC5/8）**：typecheck / lint / build 自检全绿（见 Debug Log）。
 
-**待 alex 执行（[ops·alex]，Tasks 6–7）—— dev 已 HALT 交接：**
-- ⏸️ **Task 6（AC1/2/3/4）**：按 `web/DEPLOY.md` 在 Neon / Resend / Vercel 控制台配置并 `git push origin main` 触发首次生产构建。
-- ⏸️ **Task 7（AC6/7/9）**：macOS Chrome 全链路登录 + iPhone Safari 同时登录（不顶 Mac）+ Vercel logs 核验。
-- ⏳ **Task 8**：待 alex 回报「最终 deployment URL（= `AUTH_URL` 取值）+ 多设备验收结果」后，dev 收尾填入本节并将 Status → review。
+**已完成（[ops·alex] + dev 收尾，Tasks 6–8，2026-06-02）：**
+- ✅ **Task 6（AC1/2/3/4）**：Vercel 项目（Root=`web/`）+ 三套 env 配齐，生产部署上线。**部署期排障（dev 用 Vercel CLI/REST API 处理）**：① 初始 `framework=null`（项目疑似以 root=`.` 导入、未回填）→ Vercel 跑了 `next build` 却没用 Next 适配器、全路由平台 404 → 经 API 设 `framework=nextjs`；② `AUTH_URL` 原为空串 → API 写入真值。生产稳定子域 = **https://mindprint-seven.vercel.app**（短名 `mindprint` 被占，Vercel 分配 `-seven`）。
+- ✅ **Task 7（AC6/7/9）**：macOS Chrome 全链路登录成功、刷新仍停 Empty State（30 天 database session 有效，反证生产 Neon 5 表就位）；iPhone Safari 同时登录、Mac 不被顶（**FR-6 ✅**）。日志见 `[auth] magic link sent`。AC9 残留见下。
+- ✅ **Task 8**：Dev Agent Record + File List + Change Log 已填；最终 deployment URL = `AUTH_URL` = `https://mindprint-seven.vercel.app`；多设备验收通过。
+
+**部署首测发现（1.3 auth 集成、首次 e2e 才暴露）：**
+- ✅ **已修**：发信后跳转打到 `/api/auth/verify-request`（`UnknownAction`，next-auth #11101）→ signin 页改 `signIn(..., {redirect:false})` + 显式 `redirect('/auth/verify-request')`（仅改导航、不动鉴权语义，守 1.3 红线）。
+- 📌 **已记 deferred-work（follow-up，建议 4.4）**：邮件扫描器对 magic link 做 GET 预取、消费一次性 token → 偶发 `Verification`（首测回调被命中两次：成功 1 + 12s 后失败 1；alex 真实点击恰为第一次故登录成功）。健壮修法 = magic link 落「点击确认」中间页（仅 POST 消费 token）。
+- ⚠️ **次要**：Vercel 项目 Node 版本为 **24.x**（story 建议 20.x/22.x）；Next 16 兼容、不阻塞，可在 Settings 调回。
 
 ### File List
 
 - `web/lib/env.ts` —（修改）`AUTH_URL` 改 `z.url().optional()` + `.superRefine()` 生产必需（VERCEL_ENV 判定）。
 - `web/lib/auth/auth.config.ts` —（修改）`trustHost: true` 保留 + 决策注释（源码依据）。
 - `web/.env.example` —（修改）`AUTH_URL` / Resend 发信约束注释更新。
+- `web/app/auth/signin/page.tsx` —（修改）发信后 `redirect:false` + 显式跳 `/auth/verify-request`（修 next-auth #11101 的 `UnknownAction`）。
 - `web/DEPLOY.md` —（新建）首次云部署 runbook。
 - `_bmad-output/implementation-artifacts/1-5-首次云部署vercel-vercelapp-子域.md` —（修改）frontmatter baseline_commit、Tasks 勾选、Dev Agent Record、File List、Change Log、Status。
-- `_bmad-output/implementation-artifacts/sprint-status.yaml` —（修改）`1-5` 状态 ready-for-dev → in-progress。
+- `_bmad-output/implementation-artifacts/deferred-work.md` —（修改）追加「dev/deploy of 1-5」段：1.3-F4 闭环 + 预取 follow-up + #11101 已修记录。
+- `_bmad-output/implementation-artifacts/sprint-status.yaml` —（修改）`1-5` 状态 ready-for-dev → in-progress → review。
 
 ## Change Log
 
 | 日期 | 变更 | 备注 |
 |---|---|---|
 | 2026-06-02 | Story 1.5 开发：`AUTH_URL` 生产加固 + `trustHost` 决策 + `.env.example` + `web/DEPLOY.md` runbook | [dev] Tasks 1–5 完成；typecheck/lint/build 绿；Tasks 6–7（ops）已 HALT 交接 alex |
+| 2026-06-02 | 部署上线 + 排障 + 收尾：修 `framework=nextjs` 与空 `AUTH_URL`（全路由 404 根因）、修 next-auth #11101 发信后跳转、多设备登录验收通过、记 deferred-work | [ops+dev] Tasks 6–8 完成；生产 `https://mindprint-seven.vercel.app`；Status → review |
