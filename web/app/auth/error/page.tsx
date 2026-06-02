@@ -7,11 +7,19 @@ import Link from 'next/link';
 
 export default function AuthErrorPage() {
   return (
-    <main className="flex flex-1 flex-col items-center justify-center gap-4 p-8 text-center">
-      <h1 className="text-xl font-semibold tracking-tight">MindPrint</h1>
-      <p>无法完成登录。</p>
-      <p>登录链接可能已失效或已被使用。请返回重新发送 Magic Link。</p>
-      <Link href="/auth/signin" className="rounded-md border px-3 py-2 font-medium">
+    <main
+      id="main"
+      className="flex flex-1 flex-col items-center justify-center gap-6 px-margin-mobile text-center"
+    >
+      <h1 className="font-serif text-headline-md text-on-surface">MindPrint</h1>
+      <p className="font-serif text-body-lg text-on-surface-variant">无法完成登录。</p>
+      <p className="max-w-sm font-serif text-body-lg text-on-surface-variant">
+        登录链接可能已失效或已被使用。请返回重新发送 Magic Link。
+      </p>
+      <Link
+        href="/auth/signin"
+        className="mt-2 rounded border border-outline-variant px-5 py-2 font-sans text-label-caps uppercase text-on-surface transition hover:bg-surface-container"
+      >
         返回
       </Link>
     </main>

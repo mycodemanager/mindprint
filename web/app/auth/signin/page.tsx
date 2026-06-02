@@ -25,9 +25,12 @@ export default function SignInPage() {
   }
 
   return (
-    <main className="flex flex-1 flex-col items-center justify-center gap-8 p-8">
-      <h1 className="text-xl font-semibold tracking-tight">MindPrint</h1>
-      <form action={sendMagicLink} className="flex w-full max-w-xs flex-col gap-4">
+    <main
+      id="main"
+      className="flex flex-1 flex-col items-center justify-center gap-10 px-margin-mobile"
+    >
+      <h1 className="font-serif text-headline-md text-on-surface">MindPrint</h1>
+      <form action={sendMagicLink} className="flex w-full max-w-xs flex-col gap-6">
         <label htmlFor="email" className="sr-only">
           邮箱
         </label>
@@ -38,9 +41,12 @@ export default function SignInPage() {
           required
           autoComplete="email"
           placeholder="邮箱"
-          className="rounded-md border px-3 py-2"
+          className="border-b border-outline-variant bg-transparent px-1 py-2 font-sans text-body-md text-on-surface placeholder:text-on-surface-variant focus:border-primary"
         />
-        <button type="submit" className="rounded-md border px-3 py-2 font-medium">
+        <button
+          type="submit"
+          className="rounded bg-primary px-5 py-2 font-sans text-label-caps uppercase text-on-primary shadow-card-rest transition hover:brightness-95"
+        >
           发送 Magic Link
         </button>
       </form>
