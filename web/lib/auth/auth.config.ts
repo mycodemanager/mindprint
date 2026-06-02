@@ -13,7 +13,13 @@
 import type { NextAuthConfig } from 'next-auth';
 
 export const authConfig = {
-  trustHost: true, // 代理 / Vercel 后必需，否则 UntrustedHost；配合不显式设 AUTH_URL
+  // trustHost —— Story 1.5 决策：保留 true，不关闭（deferred-work F4 原写"关 trustHost"已修正）。
+  //   依据 installed 源码 @auth/core/lib/utils/env.js:40：trustHost 未显式设时，VERCEL 环境会自动
+  //   推断为 true；而 @auth/core/lib/utils/assert.js:56 对 falsy trustHost 直接判 UntrustedHost 拒绝
+  //   所有请求 —— 显式关闭会让 Vercel/代理后登录直接崩。F4 的"防 Host header 投毒"目标改由 AUTH_URL
+  //   + config.ts:33 的 origin 断言达成（关闭 trustHost 不增任何防护）。故生产姿势 =
+  //   trustHost:true + 设 AUTH_URL pin canonical origin（Auth.js v5 on Vercel 推荐做法）。
+  trustHost: true,
   pages: {
     signIn: '/auth/signin',
     verifyRequest: '/auth/verify-request',

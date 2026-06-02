@@ -31,11 +31,14 @@ const EnvSchema = z.object({
     .toLowerCase()
     .pipe(z.email('ALLOWED_EMAIL 必须是合法邮箱（NFR-2 单用户白名单，填 alex 的邮箱）')),
 
-  // ── 部署 canonical URL —— Story 1.5 收紧为必需 ──
-  // Auth.js v5 读 process.env.AUTH_URL（v4 才是 NEXTAUTH_URL）。本 Story 用 `trustHost: true`
-  //    从请求头推断，故此变量 optional。一旦设置，sendVerificationRequest 会据此校验 magic-link 的
-  //    origin，防 Host header 投毒（code-review F4）。Story 1.5 收紧为必需 + 关 trustHost。
-  AUTH_URL: z.string().url().optional(),
+  // ── 部署 canonical URL —— Story 1.5 收紧（生产必需 / 非生产可选）──
+  // Auth.js v5 读 process.env.AUTH_URL（v4 才是 NEXTAUTH_URL）。语法层保持 optional + z.url()
+  //    （Zod v4 顶层校验，替代已弃用的 z.string().url()，与本文件 z.email() 一致）；「生产必需」由
+  //    schema 末尾的 .superRefine() 按 VERCEL_ENV 强制（见下）。一旦设置，config.ts 的
+  //    sendVerificationRequest 会据此校验 magic-link 的 origin，防 Host header 投毒（code-review F4）。
+  //    ⚠️ 不关闭 trustHost——见 auth.config.ts 注释：关闭只会在 Vercel 触发 UntrustedHost，且不增任何
+  //    防投毒能力（防护由本变量的 origin 断言提供）。
+  AUTH_URL: z.url().optional(),
 
   // ── Cloudflare R2 对象存储 —— Epic 2 收紧为必需 ──
   R2_ACCOUNT_ID: z.string().optional(),
@@ -46,7 +49,20 @@ const EnvSchema = z.object({
   // ── 备份与只读 —— Story 4.5 收紧为必需 ──
   R2_BACKUP_BUCKET_NAME: z.string().optional(),
   DATABASE_URL_READONLY: z.string().optional(),
-});
+})
+  // AUTH_URL 生产必需（Story 1.5）：用 VERCEL_ENV 判定（Vercel 注入 production / preview / development）。
+  //   比 NODE_ENV 更准——preview 构建的 NODE_ENV 同样是 'production'，但 preview 子域 URL 不稳定，
+  //   不应被强制；故仅在 VERCEL_ENV === 'production' 时要求。本地 dev/build（无 VERCEL_ENV）保持可选，
+  //   不触发 fail-fast，由 trustHost 处理 localhost。
+  .superRefine((val, ctx) => {
+    if (process.env.VERCEL_ENV === 'production' && !val.AUTH_URL) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['AUTH_URL'],
+        message: 'AUTH_URL 在生产为必需（= 稳定生产 URL，如 https://<subdomain>.vercel.app）',
+      });
+    }
+  });
 
 const parsed = EnvSchema.safeParse(process.env);
 
