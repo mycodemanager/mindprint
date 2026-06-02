@@ -4,7 +4,7 @@ baseline_commit: 1040cbfe7982390c18232e21b22bc733ed15387e
 
 # Story 1.5: 首次云部署（Vercel + vercel.app 子域）
 
-Status: review
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
