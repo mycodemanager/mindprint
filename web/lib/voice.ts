@@ -22,6 +22,18 @@ export const COPY = {
     failed: "上传失败。请重试。",
     success: "已归档。",
     successDetail: "已归档。原文件在档案库中。",
+    // Story 2.2 增补（归档链路 UI）。遵守 voice 铁律：陈述、句号收束、无 emoji / 无感叹号。
+    dropOverlay: "放下以归档。",
+    modalTitle: "归档新 Entry",
+    titleLabel: "标题",
+    confirmCta: "确认归档",
+    retry: "重试",
+    errInvalidType: "只支持 .html 或 .htm 文件。",
+    errTooLarge: "文件超过 10MB。",
+    errMultiple: "一次归档一个文件。",
+    errTitle: "标题需 1 到 200 字符。",
+    errRead: "读取文件失败。请重试。",
+    errGeneric: "归档失败。请重试。",
   },
   delete: {
     confirmTitle: "确认删除？",

@@ -28,3 +28,7 @@
 
 - **AWS SDK v3 要求 Node ≥22（2027-01 起）**：`@aws-sdk/client-s3` 运行时警告——2027 年 1 月第一周后发布的版本将要求 Node ≥22；当前本地 Node 20.20.2，Vercel 亦 20.x（见 `web/DEPLOY.md`）。非阻塞，但升级窗口前需把本地 + Vercel + GitHub Actions Node 提到 22。 → **Story 4.4（CI/Node 版本）/ 4.5**。`web/package.json`（engines）/ Vercel 设置
 - **`server-only` 独立脚本解析**（已解决，记录备查）：Next 16/Turbopack 虚拟提供 `server-only`，node_modules 无真实包 → 独立 tsx 脚本（烟雾测试 / 未来 `scripts/backup.ts`）import 会 `Cannot find module 'server-only'`。解法：装 devDep `server-only` + 运行加 `--conditions=react-server`（解析到包内空实现）。✅ 已落地于 Story 2.1。`web/scripts/r2-smoke.ts`
+
+## Deferred from: code review (Codex) of 2-2-归档链路 (2026-06-03)
+
+- **R2 孤儿对象清理脚本**（Codex P2）：`archiveEntry` 的应用层补偿回滚已做「删 R2 2 次重试 + 失败显式告警」，但 DB insert 与 R2 delete **双双失败**的极端情形仍会留下孤儿 R2 对象（无对应 DB 行）。彻底的「no-orphan 保证」需一个确定性的 **bucket↔DB 对账清理 sweeper**（列举 R2 对象 → 比对 entries 表 → 删无主对象）。架构 Data Boundaries 已规划周期清理；归并到备份/清理脚本一并实现。 → **Epic 4（删除/清理）/ Story 4.5（备份脚本）**。`web/app/_actions/archive.ts` / 新建 `web/scripts/`
