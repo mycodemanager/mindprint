@@ -4,7 +4,7 @@ baseline_commit: 678c349f5f5eb2afc45e286d7e6ce3143e0d6eba
 
 # Story 2.2: 归档链路（Dropzone + ArchiveModal + archiveEntry Server Action）
 
-Status: review
+Status: done
 
 <!-- Epic 2 第二个 story。把 2.1 的 R2 helper 接上 UI：拖入 .html → 预览编辑标题 → 事务性归档（R2+DB，失败回滚）。纯代码 story（无 ops），但完整链路验证需浏览器（登录 + 拖拽），见 Dev Notes 测试节。 -->
 
