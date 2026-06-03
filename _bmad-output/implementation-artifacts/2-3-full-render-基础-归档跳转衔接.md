@@ -4,7 +4,7 @@ baseline_commit: c35584f8c5171c9a161a66152c83f1779a6b29e8
 
 # Story 2.3: Full Render 基础 + 归档跳转衔接
 
-Status: review
+Status: done
 
 <!-- Epic 2 收官 story（第 3/3）。把 2.1 的 `fetchEntryHtml` + 2.2 已写好的 `router.push('/entry/[id]')` 接成闭环：
      建动态页 `/entry/[id]` + HTML 代理 route + 沙箱 iframe（NFR-1 首次实装到 Full Render）。
@@ -113,8 +113,8 @@ so that 归档后我立刻看到文件被渲染出来，且保护性沙箱阻止
   - [x] `npm run typecheck` + `npm run lint` 绿（0 错误 0 警告）。
   - [x] RSC 边界自查：error.tsx 'use client' 仅 import 纯 voice.ts；page/FullRender/TopChrome/queries/route 经 server-only、无泄漏。
   - [x] **AC10 实测通过**（dev server curl，无需登录）：未登录 `GET /api/entry/<uuid>/html` → **401 + 空 body（0 字节）**；malformed id 同样 401；页面 `/entry/<uuid>` 未登录 → **307 → /auth/signin**。
-  - [ ] ⛔ 浏览器实测（需 alex 登录或浏览器工具）：**AC8** 归档 → 跳转看到沙箱渲染（不再 404）+ `←`/刷新持久；**AC9** 含 `<script>` 的 HTML 脚本不执行 —— ① iframe 内（标题不变/无跳转/无 cookie）+ ② **新标签直接打开 `/api/entry/[id]/html`** 也不执行（验 Codex P1 修复的 `Content-Security-Policy: sandbox` 响应头）。
-  - [ ] ⛔ `next build`：本机字体 gstatic flake 已知阻断（非本 story 代码）→ Vercel 权威构建。
+  - [x] ✅ 浏览器实测（alex 生产环境验收 2026-06-03）：**AC8** 归档 → 跳转看到沙箱渲染 + `←`/刷新持久；**AC9** 含 `<script>` 的 HTML 脚本不执行（iframe 内 + 新标签直接打开均不执行，CSP sandbox 生效）。
+  - [x] ✅ `next build`：Vercel 生产构建通过（生产部署在线、alex 已验收即证；本机字体 gstatic flake 非代码问题）。
 
 ## Dev Notes
 
@@ -243,9 +243,9 @@ claude-opus-4-8 (1M context) · 2026-06-03
 - typecheck + lint 绿；RSC 边界经分析正确（server-only 未泄漏到 client；error.tsx 仅引纯 voice.ts）。
 - AC10 实测通过（401 空 body + 页面 307 重定向）。
 
-**待验证（不阻塞代码 review）：**
-- ⛔ AC8 / AC9 认证态浏览器全链路：归档 → 跳 `/entry/[id]` 看到沙箱渲染（不再 404）；含 `<script>` 的 HTML 脚本不执行（opaque origin + 禁 script）。需 alex 登录实测或浏览器工具协助（magic link 无法自动化）。
-- ⛔ `next build`：本机 fonts.gstatic CJK 字体 flake 阻断（非本 story 代码，报错在 `app/layout.tsx` 字体）→ Vercel 权威构建（push main 时）。
+**已验证（alex 生产环境验收 2026-06-03）：**
+- ✅ AC8 / AC9 认证态浏览器全链路：归档 → 跳 `/entry/[id]` 看到沙箱渲染；含 `<script>` 的 HTML 脚本不执行（iframe 内 + 新标签直接打开均不执行 → CSP sandbox + iframe sandbox 双重生效）。
+- ✅ Vercel 生产构建 + 部署通过（生产在线验收即证）。
 
 ### File List
 
