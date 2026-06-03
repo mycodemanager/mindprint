@@ -40,11 +40,24 @@ const EnvSchema = z.object({
   //    防投毒能力（防护由本变量的 origin 断言提供）。
   AUTH_URL: z.url().optional(),
 
-  // ── Cloudflare R2 对象存储 —— Epic 2 收紧为必需 ──
-  R2_ACCOUNT_ID: z.string().optional(),
-  R2_ACCESS_KEY_ID: z.string().optional(),
-  R2_SECRET_ACCESS_KEY: z.string().optional(),
-  R2_BUCKET_NAME: z.string().optional(),
+  // ── Cloudflare R2 对象存储 —— Story 2.1 收紧完成（必需）──
+  // 用 .trim().min(1) 同时拒绝空串 / 纯空白（消化 Story 1.2 code-review 的「空串」defer 项）。
+  R2_ACCOUNT_ID: z
+    .string()
+    .trim()
+    .min(1, 'R2_ACCOUNT_ID 不能为空（Cloudflare account id，构成 R2 S3 endpoint）'),
+  R2_ACCESS_KEY_ID: z
+    .string()
+    .trim()
+    .min(1, 'R2_ACCESS_KEY_ID 不能为空（R2 API token 的 Access Key ID）'),
+  R2_SECRET_ACCESS_KEY: z
+    .string()
+    .trim()
+    .min(1, 'R2_SECRET_ACCESS_KEY 不能为空（R2 API token 的 Secret Access Key）'),
+  R2_BUCKET_NAME: z
+    .string()
+    .trim()
+    .min(1, 'R2_BUCKET_NAME 不能为空（生产 bucket 名，如 mindprint-entries）'),
 
   // ── 备份与只读 —— Story 4.5 收紧为必需 ──
   R2_BACKUP_BUCKET_NAME: z.string().optional(),

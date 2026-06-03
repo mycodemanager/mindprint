@@ -23,3 +23,8 @@
 - **1.3-F4 已消化（含更正，非延后）**：F4 原写「AUTH_URL 必需 **+ 关闭 trustHost**」。本 Story 落实 `AUTH_URL` 生产必需（`env.ts` superRefine，按 `VERCEL_ENV`），但**保留 `trustHost: true`**——核 installed `@auth/core` 源码（`lib/utils/env.js:40` 自动推断 / `lib/utils/assert.js:56` falsy→UntrustedHost）：Vercel 下关闭 trustHost 只会触发 `UntrustedHost`、且不增任何防投毒能力，防护由 `AUTH_URL` + `config.ts:33` origin 断言提供。故 F4 真实目标（防 Host 投毒）已达成，「关 trustHost」系误导。✅ 闭环。`web/lib/env.ts` / `web/lib/auth/auth.config.ts`
 - **magic link 一次性 token 被邮件扫描器预取消费**：生产首测发现回调被命中两次（成功 1 次 + 12s 后 `Verification` 失败 1 次）—— Gmail/邮件客户端对链接做 GET 预取会消费一次性 token。本次 alex 真实点击恰为第一次故登录成功；但若扫描器抢先，会偶发「点了登不上」。健壮修法：magic link 落到「点击确认」中间页（仅 POST 消费 token，GET 预取不消费）。 → **follow-up（建议 Story 4.4 auth 强化时）**。`web/lib/auth/config.ts` / 新增确认页
 - **（已修，记录备查）发信后跳转打到 `/api/auth/verify-request`（`UnknownAction`，next-auth #11101）**：next-auth(beta)+Next 16 默认把发信后跳转打到无效 API 动作 → 错误页。本 Story 已在 signin 页改 `signIn(..., { redirect:false })` + 显式 `redirect('/auth/verify-request')` 修复（不动鉴权语义）。✅ `web/app/auth/signin/page.tsx`
+
+## Deferred from: dev of 2-1-r2-存储基础bucket-iam-s3-sdk-helper (2026-06-02)
+
+- **AWS SDK v3 要求 Node ≥22（2027-01 起）**：`@aws-sdk/client-s3` 运行时警告——2027 年 1 月第一周后发布的版本将要求 Node ≥22；当前本地 Node 20.20.2，Vercel 亦 20.x（见 `web/DEPLOY.md`）。非阻塞，但升级窗口前需把本地 + Vercel + GitHub Actions Node 提到 22。 → **Story 4.4（CI/Node 版本）/ 4.5**。`web/package.json`（engines）/ Vercel 设置
+- **`server-only` 独立脚本解析**（已解决，记录备查）：Next 16/Turbopack 虚拟提供 `server-only`，node_modules 无真实包 → 独立 tsx 脚本（烟雾测试 / 未来 `scripts/backup.ts`）import 会 `Cannot find module 'server-only'`。解法：装 devDep `server-only` + 运行加 `--conditions=react-server`（解析到包内空实现）。✅ 已落地于 Story 2.1。`web/scripts/r2-smoke.ts`
