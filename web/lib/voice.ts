@@ -42,6 +42,13 @@ export const COPY = {
   },
   render: {
     failed: "渲染未能完成。",
+    stillArchived: "Entry 仍在档案库中。", // Story 2.3 失败兜底（陈述句，句号收束）
+  },
+  // Full Render 视图 chrome（Story 2.3）。标签无句号；footerHint 的 Esc 行为属 Story 3.4。
+  fullRender: {
+    backToTimeline: "返回时间线", // Top Chrome 返回 + error.tsx 链接复用
+    footerHint: "Esc 返回时间线", // 底部静态提示（Esc 键盘行为 Story 3.4 才接）
+    downloadOriginal: "下载原文件", // error.tsx disabled 占位 + Epic 4 More Menu
   },
   loading: "正在加载……",
   ui: {

@@ -58,7 +58,7 @@ development_status:
   epic-2: in-progress
   2-1-r2-存储基础bucket-iam-s3-sdk-helper: done
   2-2-归档链路dropzone-archivemodal-archiveentry-server-action: done
-  2-3-full-render-基础-归档跳转衔接: backlog
+  2-3-full-render-基础-归档跳转衔接: review
   epic-2-retrospective: optional
 
   # ── Epic 3: 时间线浏览与思维演进回看（Browse Timeline）· FR-4/5 · 5 stories ──
