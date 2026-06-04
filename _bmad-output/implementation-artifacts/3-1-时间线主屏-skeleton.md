@@ -4,7 +4,7 @@ baseline_commit: 7a275bb5cd4f0aa44b6b8ebeeef6b0afffb7d73e
 
 # Story 3.1: 时间线主屏 + Skeleton
 
-Status: done
+Status: review
 
 <!-- Epic 3 开篇 story（第 1/5）。把主屏从「永远 Empty State」升级为「有 Entry → Timeline 网格 / 无 Entry → Empty State」的分支，并补 cold-load skeleton。
      本 story 只搭骨架（page 接线 + getEntries 查询 + loading.tsx skeleton + Timeline 基础壳），**不画卡片网格**——
