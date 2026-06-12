@@ -21,7 +21,7 @@ interface Props {
  */
 export function FullRender({ entry }: Props) {
   return (
-    <div className="flex flex-1 flex-col">
+    <div className="flex h-dvh flex-col">
       <FullRenderTopChrome entry={entry} />
 
       {/* 主渲染区 · 沙箱化 iframe（NFR-1）。<main id="main"> 承接 layout skip-link。 */}
