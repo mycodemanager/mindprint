@@ -4,7 +4,7 @@ baseline_commit: 241598e
 
 # Story 3.2: 卡片网格（EntryCard + MonthDivider + ThumbnailIframe）
 
-Status: review
+Status: done
 
 <!-- Epic 3 第 2/5 story。把 3.1 的 Timeline 空壳填成真实卡片网格：EntryCard（标题+时间+缩略）+ MonthDivider（月份分隔）+ ThumbnailIframe（视口懒渲染沙箱 iframe）。
      纯代码 story（无 ops）。完成后主屏真正"可浏览"：按月分组的卡片网格 + 每卡 HTML 内容缩略 + 单击进 Full Render。
