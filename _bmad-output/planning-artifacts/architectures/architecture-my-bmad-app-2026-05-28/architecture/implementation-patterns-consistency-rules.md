@@ -364,7 +364,7 @@ console.log('[backup] dump complete', { rows, bytes });
 ### All AI Agents MUST:
 
 1. **认证调用强制**：每个 Server Action / Route Handler 第一行业务代码是 `await requireAlex()`。**无例外**——包括看似"public" 的端点
-2. **沙箱属性强制**：所有渲染 Entry HTML 的 iframe **必须**带 `sandbox=""` 属性（空字符串值）；缺失或加 `allow-*` 属性视为安全违规
+2. **沙箱属性强制**（经 Story 3.6 修订）：所有渲染 Entry HTML 的 iframe **必须**带 `sandbox="allow-scripts"`（仅此一个 token → opaque origin，脚本可执行但隔离宿主 cookie/DOM/storage），route 响应配 CSP `sandbox allow-scripts`。**红线**：缺失 `sandbox`、或叠加 `allow-same-origin`（与 allow-scripts 并存即逃逸沙箱）、或加 `allow-popups`/`allow-forms`/`allow-top-navigation`/`allow-modals` 等任何其他 token，均视为安全违规
 3. **签名 URL 不进 DOM**：下载链接经服务端代理或一次性短时效 presigned URL，不在 client-rendered HTML 中长期可见
 4. **revalidate 强制**：任何 mutation Server Action 完成必须显式 `revalidatePath()`——没有缓存兜底
 5. **Zod 双层验证强制**：client 与 server 用同一 schema
@@ -446,16 +446,16 @@ export async function update_title(entryId: string, newTitle: string) {
 }
 ```
 
-### ✅ Good Example · iframe 沙箱化（同源 srcDoc + sandbox=""）
+### ✅ Good Example · iframe 沙箱化（route-handler src + sandbox="allow-scripts"，经 Story 3.6 修订）
 
 ```tsx
-// components/EntryCard.tsx —— 缩略预览 iframe
+// components/ThumbnailIframe.tsx —— 缩略预览 iframe（Full Render 同模型）
 <iframe
-  srcDoc={htmlContent}        // ✅ 服务端 RSC 内联 HTML
-  sandbox=""                   // ✅ 空属性 = 所有能力默认关闭
-  loading="lazy"               // ✅ 视口外不加载
+  src={`/api/entry/${id}/html`}  // ✅ route handler 流式（非 srcDoc；签名/凭据不进 DOM）
+  sandbox="allow-scripts"        // ✅ 仅此 token → opaque origin：脚本可执行（渲染 JS 原型）但隔离宿主 cookie/DOM/storage
+  loading="lazy"                 // ✅ 视口外不加载
   title={`${entry.title} 内容缩略`}  // ✅ a11y
-  aria-hidden="true"           // ✅ 屏幕阅读器不读 iframe 内
+  aria-hidden="true"             // ✅ 屏幕阅读器不读 iframe 内
   tabIndex={-1}
   className="absolute top-0 left-0 origin-top-left"
   style={{
@@ -463,9 +463,10 @@ export async function update_title(entryId: string, newTitle: string) {
     height: '250%',
     transform: 'scale(0.4)',
     border: 'none',
-    pointerEvents: 'none',     // ✅ 卡片整体单击进 Full Render
+    pointerEvents: 'none',       // ✅ 卡片整体单击进 Full Render
   }}
 />
+// 🚨 红线：绝不叠加 allow-same-origin（与 allow-scripts 并存即逃逸沙箱）
 ```
 
 ### ❌ Anti-Pattern · iframe 沙箱化
@@ -474,7 +475,7 @@ export async function update_title(entryId: string, newTitle: string) {
 // 错误示范
 <iframe
   src={`/api/entry/${id}/html?token=${signedToken}`}  // ❌ 签名 URL 进 DOM
-  sandbox="allow-scripts allow-same-origin"           // ❌ 关键能力开放等于无沙箱
+  sandbox="allow-scripts allow-same-origin"           // ❌ allow-scripts 单独 OK，但叠 allow-same-origin → 脚本可移除沙箱逃逸 = 无沙箱
   // ❌ 缺 title / aria
 />
 ```

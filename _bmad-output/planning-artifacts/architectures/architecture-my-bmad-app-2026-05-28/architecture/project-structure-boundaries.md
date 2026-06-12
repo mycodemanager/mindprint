@@ -340,10 +340,12 @@ app/entry/[id]/page.tsx (Full Render · Server Component)
 
 ### NFR-1 HTML 渲染沙箱化（跨 FR-4 + FR-5）
 
+> **⚠️ 经 Story 3.6 修订（2026-06-04）**：沙箱模型已从 `sandbox=""` + srcDoc 改为 **`sandbox="allow-scripts"`（opaque，无 allow-same-origin）+ route-handler `src`（非 srcDoc）+ CSP `sandbox allow-scripts`**。本文件其余位置（目录树注释、数据流图、组件表）残留的 `sandbox=""` / `srcDoc` 描述系旧模型，一律以本注 + `core-architectural-decisions.md` NFR-1 表为准。**红线**：allow-scripts 严禁叠加 allow-same-origin。
+
 | 实现点 | 位置 |
 |---|---|
-| 缩略预览 iframe | `web/components/ThumbnailIframe.tsx`（`sandbox=""` + srcDoc + scale） |
-| Full Render iframe | `web/components/FullRender.tsx`（`sandbox=""` + srcDoc） |
+| 缩略预览 iframe | `web/components/ThumbnailIframe.tsx`（`sandbox="allow-scripts"` + `src` + scale） |
+| Full Render iframe | `web/components/FullRender.tsx`（`sandbox="allow-scripts"` + `src`） |
 | HTML 内容服务端代理（避免签名 URL 进 DOM） | `web/app/api/entry/[id]/html/route.ts` |
 
 ### NFR-2 私有访问三层隔离

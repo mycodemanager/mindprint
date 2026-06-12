@@ -11,6 +11,8 @@ Status: done
      纯代码 story（无 ops）。全链路验证需浏览器（登录 + 看到沙箱渲染），见 Dev Notes 测试节。
      完成后：归档 → ≤1 跳转看到完整渲染（FR-3 满足）；主屏仍 Empty State（timeline 渲染属 Epic 3）。 -->
 
+> **⚠️ 沙箱模型经 Story 3.6 修订（2026-06-04 / sprint-change-proposal-2026-06-04）**：本 story 落地的 `sandbox=""`（禁所有脚本）已被 Story 3.6 改为 **`sandbox="allow-scripts"`（opaque origin，无 allow-same-origin）+ 路由 CSP `sandbox allow-scripts`**——脚本可执行（渲染 JS 驱动原型，兑现 FR-5 原貌），但 opaque origin 仍隔离宿主 cookie/DOM/storage。**下列历史正文（AC3 第 38–39 行、AC9、Dev Notes「`sandbox=""` 安全模型」§129–137、Completion 的 2026-06-03 验收记录）描述的是旧模型，保留作历史记录、不删改**；当前真相以 Story 3.6 为准。AC9 的安全性质仍成立（脚本写 cookie / 改 `parent.location` 无效），但验证语义从「脚本不执行」变为「脚本执行但被 opaque origin 隔离」，需 alex 按 Story 3.6 AC7 重新生产实测。**红线**：`allow-scripts` 严禁叠加 `allow-same-origin`。
+
 ## Story
 
 As alex,
@@ -72,7 +74,7 @@ so that 归档后我立刻看到文件被渲染出来，且保护性沙箱阻止
 - 浏览器 `←` 返回主屏（仍 Empty State，Epic 3 才接 timeline）。
 - 刷新 `/entry/{id}` URL → Entry 仍可见（DB + R2 持久化）。
 
-**AC9 — NFR-1 沙箱化验证**
+**AC9 — NFR-1 沙箱化验证**（⚠️ 语义经 Story 3.6 修订为「脚本执行但 opaque 隔离」，见顶部注）
 - 测试 HTML 含 `<script>document.cookie='x'</script>` 或 `<script>parent.location='https://attacker.com'</script>` → iframe 内 script **不执行**（`sandbox=""` 阻 script；opaque origin 隔离 cookie/localStorage）。
 
 **AC10 — 401 验证**
@@ -273,3 +275,10 @@ claude-opus-4-8 (1M context) · 2026-06-03
 - `npm run typecheck` + `npm run lint`：均通过（0 错误 0 警告）。
 - CSP 头为 200（认证态）分支静态新增，typecheck 覆盖；可观测验证并入 alex 的 AC9 浏览器实测（直接导航该 URL 脚本不执行）。
 - `next build` 仍受本机 fonts.gstatic CJK flake 阻断（非本 story 代码）→ Vercel 权威构建。
+
+---
+
+## 修订记录（Story 3.6 · 2026-06-04）
+
+- NFR-1 沙箱模型经 sprint-change-proposal-2026-06-04 修订：`sandbox=""`（禁脚本）→ `sandbox="allow-scripts"`（opaque，无 allow-same-origin），route CSP `sandbox` → `sandbox allow-scripts`。实际代码改动（`FullRender.tsx` / `route.ts`）由 Story 3.6 落地；本文件 sandbox 相关 AC/Dev Notes/验收记录描述旧模型，已在顶部加注、正文保留不删。
+- **retro watch（M3）**：① 多卡并发 JS 缩略性能（IO 懒挂载已限近视口）；② allow-scripts 残余风险（脚本可发网络请求 / 耗 CPU），对 alex 自制内容低危，未来归档不可信 HTML 再加 connect-src 硬化。详见 Story 3.6 + proposal §4。

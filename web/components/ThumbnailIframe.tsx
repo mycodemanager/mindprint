@@ -17,7 +17,8 @@ type Props = Pick<Entry, "id" | "title" | "archivedAt">;
  *   故进入视口后先 fetch 一次读响应头（取到即 cancel body，不下载完整 HTML）：res.ok 才挂 iframe，
  *   否则退化兜底（Codex review P2 —— 否则 404/401 时只见空缩略区）。
  * - iframe 用 **src=/api/entry/[id]/html（非 srcDoc）**：仅可见卡发请求，首屏 payload 不含 Entry HTML。
- *   sandbox="" 空属性（NFR-1）；同源 src/探活请求自动带会话 cookie → route requireAlex 通过。
+ *   sandbox="allow-scripts"（opaque，无 allow-same-origin → 隔离宿主；允许脚本以渲染 JS 原型，Story 3.6）；
+ *   同源 src/探活请求自动带会话 cookie → route requireAlex 通过。
  * - 失败 → 退化「标题 + 时间」占位（**禁文本摘要**，FR-4）。每卡独立实例 → 失败隔离（NFR-3）。
  */
 export function ThumbnailIframe({ id, title, archivedAt }: Props) {
@@ -78,7 +79,7 @@ export function ThumbnailIframe({ id, title, archivedAt }: Props) {
       ) : inView && status === "ok" ? (
         <iframe
           src={`/api/entry/${id}/html`}
-          sandbox=""
+          sandbox="allow-scripts"
           loading="lazy"
           title={`${title} 内容缩略`}
           aria-hidden="true"

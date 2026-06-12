@@ -275,6 +275,8 @@ alex 可对单一 Entry 做事后管理：**编辑显示标题**、**下载原 .
 - **机制开放**：iframe `sandbox` 属性组合 / 独立 origin 子域名（如 `render.<domain>`）/ 严格 CSP 策略 / 上述组合等候选方案均可接受。**由架构阶段决定**——参见 `addendum.md` §2.1
 - **被引用于**：§4.2 FR-4（缩略预览也算渲染）、§4.3 FR-5（Full Render）
 
+> **澄清注（NFR-1 沙箱修订 · 2026-06-04 / Story 3.6）**：沙箱目标是**隔离宿主访问**（上面的凭据隔离 + 行为隔离），**从不要求"禁止脚本执行"**。早期实现（Story 2.3/3.2）用 `sandbox=""` 禁所有脚本，导致 JS 驱动的 AI 原型在 Full Render / 缩略图只剩空壳，违反 §4.3 FR-5「原貌等同」。V1 机制据此锁定为 **`sandbox="allow-scripts"`（opaque origin，无 `allow-same-origin`）+ 路由 CSP `sandbox allow-scripts`**：脚本可执行（兑现 FR-5 原貌），但 opaque origin 仍隔离宿主 cookie/DOM/storage、且无 top-nav/popup/form/modal 能力（满足上述凭据/行为隔离）。**红线**：严禁叠加 `allow-same-origin`（与 allow-scripts 并存即逃逸沙箱）。机制至此锁定，取代上方"由架构阶段决定"的开放表述。详见 `sprint-change-proposal-2026-06-04.md`。
+
 ### NFR-2：私有访问（仅 alex）
 
 MindPrint 的**所有数据与界面**仅对认证后的 alex 可见。**承接 brief"可有最简私有认证"立场**——本节列出的三层隔离是面对 untrusted HTML 渲染（§4.2 缩略预览 + §4.3 Full Render）时不得不展开的**最小集合**，不是追求完整的私有访问控制系统。

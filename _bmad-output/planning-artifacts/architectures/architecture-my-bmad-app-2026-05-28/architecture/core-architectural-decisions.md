@@ -7,7 +7,7 @@
 - 对象存储 = **Cloudflare R2**（alex 自有 CF 账号 + S3 兼容 + 零 egress）
 - 认证 = **Auth.js v5 + Resend Email Provider**（Magic Link）
 - ORM = **Drizzle ORM 0.x + drizzle-orm/neon-http 驱动**
-- 沙箱化机制 = **同源 srcDoc + `sandbox=""`**（NFR-1 锁定）
+- 沙箱化机制 = **src（route handler）+ `sandbox="allow-scripts"`（opaque，无 allow-same-origin）+ 路由 CSP `sandbox allow-scripts`**（NFR-1 锁定 · 经 Story 3.6 修订）
 - API 风格 = **混合 · RSC 读 + Server Actions 写 + Route Handlers 按场景**
 - 数据验证 = **Zod**
 - 部署 = **Vercel**
@@ -69,15 +69,17 @@
 | **唯一允许的邮箱** | alex 的固定邮箱（环境变量 `ALLOWED_EMAIL`） | NFR-2 "仅 alex 可访问"——Auth.js `signIn` callback 中校验邮箱白名单，非 alex 邮箱直接拒绝 |
 | **Lucia 已淘汰** | 不考虑 | 2024 末 sunset，Auth.js 是当前唯一稳定维护选项 |
 
-**NFR-1 HTML 渲染沙箱化（锁定）**：
+**NFR-1 HTML 渲染沙箱化（锁定 · 经 Story 3.6 / sprint-change-proposal-2026-06-04 修订为 allow-scripts）**：
 
 | 决策 | 选择 | 实现 |
 |---|---|---|
-| **机制** | **同源 srcDoc + `sandbox=""`** | iframe 内联 HTML（srcDoc）+ 空 sandbox 属性 |
-| **凭据隔离** | iframe srcDoc 获得 **opaque origin**（浏览器规范 HTML Living Standard） | 即便宿主同源，iframe 也不可访问 MindPrint 的 cookie / localStorage / sessionStorage |
-| **行为隔离** | sandbox 空属性 = 所有能力默认关闭 | 阻止 script 执行 / form 提交 / popup / topnav / plugins 等 |
+| **机制** | **src（route handler）+ `sandbox="allow-scripts"`** | iframe 经 route handler 流式取 HTML（src，非 srcDoc）+ 仅 `allow-scripts`（opaque，无 `allow-same-origin`）+ 路由 CSP `sandbox allow-scripts` |
+| **凭据隔离** | iframe 文档因**无 `allow-same-origin`** 获 **opaque origin**（HTML Living Standard） | 即便 src 是同源 URL，iframe 也不可访问 MindPrint 的 cookie / localStorage / sessionStorage |
+| **行为隔离** | 仅 `allow-scripts`、无其他 token | **脚本执行**（渲染 JS 驱动原型，兑现 FR-5 原貌）但 opaque origin 碰不到宿主 cookie/DOM/parent；无 top-nav/popup/form/modal token → 不能导航宿主/弹窗/外发表单 |
 | **HTML 流路径** | client ← Route Handler ← R2（服务端代理） | 签名 URL 不进 DOM；服务端可未来加 content validation / size 检查 |
-| **缩略预览同样用此机制** | sandbox + 缩放 iframe（OQ-8 方案 a） | 与 Full Render 共享同一沙箱模型，符合 §4.2 FR-4 注释 |
+| **缩略预览同样用此机制** | `allow-scripts` + 缩放 iframe（OQ-8 方案 a） | 与 Full Render 共享同一沙箱模型，符合 §4.2 FR-4 注释 |
+
+> **修订注（Story 3.6）**：原表为「同源 srcDoc + `sandbox=""`（禁脚本）」。`sandbox=""` 禁所有脚本导致 JS 驱动原型只剩空壳、违反 FR-5「原貌等同」；改为 `sandbox="allow-scripts"`（opaque，**不加** `allow-same-origin`）后脚本可执行而宿主访问仍被隔离。srcDoc→src 系 Story 2.3/3.2 早已落地（route handler 流式），此处一并纠正 stale。**红线**：`allow-scripts` 严禁叠加 `allow-same-origin`。
 
 **NFR-2 三层隔离实现**：
 
@@ -228,6 +230,6 @@
 - **认证 → 所有其他**：Magic Link 完成前任何 Server Action / Route Handler 调用都被 middleware 拒。**FR-6 是 FR-1 ~ FR-7 全部能力的前置依赖**（PRD §4.4）
 - **DB schema → Auth.js + Entry 操作**：Drizzle schema 必须含 Auth.js 4 张标准表 + entries 表；`@auth/drizzle-adapter` 期望特定字段名（先定 schema 再展开 Auth.js）
 - **R2 bucket → 归档 / 下载 / HTML 代理**：R2 桶配置 + bucket policy 必须先就位，否则 Story 3/5/6 跑不通
-- **沙箱化机制（srcDoc + sandbox=""）→ FR-4 缩略预览 + FR-5 完整渲染**：两个 FR 共享同一沙箱模型；改沙箱要同时影响二者
+- **沙箱化机制（src + `sandbox="allow-scripts"` opaque + CSP `sandbox allow-scripts`）→ FR-4 缩略预览 + FR-5 完整渲染**：两个 FR 共享同一沙箱模型；改沙箱要同时影响二者（经 Story 3.6 修订）
 - **revalidatePath → 所有 Server Action**：变更动作必须显式 revalidate，否则客户端看到陈旧数据（无客户端缓存层兜底）
 - **备份脚本 → Neon connection + R2 IAM**：脚本需要 Neon read-only connection string + R2 backup bucket 写权限（与生产 bucket 分离）

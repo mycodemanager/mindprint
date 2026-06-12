@@ -4,7 +4,7 @@ baseline_commit: 1fd98d63ef6d323b4fd436b9cbc5cad401b9e256
 
 # Story 3.6: NFR-1 沙箱修订 · allow-scripts
 
-Status: ready-for-dev
+Status: review
 
 <!-- correct-course 新增 story（非来自 epics.md）。需求源 = 已批准的 sprint-change-proposal-2026-06-04.md（NFR-1 沙箱 sandbox="" → allow-scripts，跨 FR-4 缩略 + FR-5 Full Render）。
      根因（已实测）：alex 核心归档内容是 JS 驱动的 AI 交互原型；2.3/3.2 的 iframe `sandbox=""` 禁所有脚本 → #app 永不被填充 → Full Render + 缩略图对这类内容只剩空壳，违反 FR-5「原貌等同」。
@@ -64,19 +64,19 @@ so that 我归档的 JS 驱动 AI 原型能以**原貌**完整渲染（兑现 FR
 
 ## Tasks / Subtasks
 
-- [ ] **Task 1 — FullRender iframe（AC1）**
-  - [ ] 改 [`web/components/FullRender.tsx`](web/components/FullRender.tsx) 第 30 行 `sandbox=""` → `sandbox="allow-scripts"`
-  - [ ] 更新第 17–18 行 JSDoc（opaque + 允许脚本 + 严禁 allow-same-origin）
-- [ ] **Task 2 — ThumbnailIframe iframe（AC2）**
-  - [ ] 改 [`web/components/ThumbnailIframe.tsx`](web/components/ThumbnailIframe.tsx) 第 81 行 `sandbox=""` → `sandbox="allow-scripts"`
-  - [ ] 更新第 19–20 行注释；确认探活 gate / onError / IO / scale / 兜底**未被动到**
-- [ ] **Task 3 — route CSP（AC3）**
-  - [ ] 改 [`web/app/api/entry/[id]/html/route.ts`](web/app/api/entry/[id]/html/route.ts) 第 43 行 CSP → `'sandbox allow-scripts'`
-  - [ ] 更新第 39–42 行注释（opaque 仍隔离会话；防护核心是 opaque 非禁脚本）
-- [ ] **Task 4 — PRD NFR-1 澄清注（AC4）** — 隔离要求不改，加澄清注 + 锁定机制
-- [ ] **Task 5 — architecture 更正（AC5）** — 第 10 / 72–80 / 231 行；顺带 srcDoc→src 纠 stale
-- [ ] **Task 6 — Story 2.3 AC9 语义 + retro 注（AC6）** — 历史验收记录只加注不删改
-- [ ] **Task 7 — 验证（AC7）** — typecheck + lint 绿；整理 alex 生产实测清单 (a)/(b)/(c) 交 alex
+- [x] **Task 1 — FullRender iframe（AC1）**
+  - [x] 改 [`web/components/FullRender.tsx`](web/components/FullRender.tsx) 第 30 行 `sandbox=""` → `sandbox="allow-scripts"`
+  - [x] 更新第 17–18 行 JSDoc（opaque + 允许脚本 + 严禁 allow-same-origin）
+- [x] **Task 2 — ThumbnailIframe iframe（AC2）**
+  - [x] 改 [`web/components/ThumbnailIframe.tsx`](web/components/ThumbnailIframe.tsx) 第 81 行 `sandbox=""` → `sandbox="allow-scripts"`
+  - [x] 更新第 19–20 行注释；确认探活 gate / onError / IO / scale / 兜底**未被动到**
+- [x] **Task 3 — route CSP（AC3）**
+  - [x] 改 [`web/app/api/entry/[id]/html/route.ts`](web/app/api/entry/[id]/html/route.ts) 第 43 行 CSP → `'sandbox allow-scripts'`
+  - [x] 更新第 39–42 行注释（opaque 仍隔离会话；防护核心是 opaque 非禁脚本）
+- [x] **Task 4 — PRD NFR-1 澄清注（AC4）** — 隔离要求不改，加澄清注 + 锁定机制
+- [x] **Task 5 — architecture 更正（AC5）** — 第 10 / 72–80 / 231 行；顺带 srcDoc→src 纠 stale
+- [x] **Task 6 — Story 2.3 AC9 语义 + retro 注（AC6）** — 历史验收记录只加注不删改
+- [x] **Task 7 — 验证（AC7）** — typecheck + lint 绿；整理 alex 生产实测清单 (a)/(b)/(c) 交 alex
 
 ## Dev Notes
 
@@ -127,8 +127,50 @@ so that 我归档的 JS 驱动 AI 原型能以**原貌**完整渲染（兑现 FR
 
 ### Agent Model Used
 
+claude-opus-4-8 (1M context) · 2026-06-12
+
 ### Debug Log References
+
+- `npm --prefix web run typecheck`（tsc --noEmit）：0 错误（属性/字符串/文档改动，类型不变）。
+- `npm --prefix web run lint`（eslint）：0 错误 0 警告。
+- 未写自动化测试：本 story 改动为 iframe `sandbox` 属性值 + Response CSP header 字符串值 + 文档措辞，无可单测的逻辑分支；沙箱行为（脚本执行 + opaque 隔离）只能浏览器实测 → 归 AC7 alex 生产验收（与 Story 2.3 AC9 同模式）。
 
 ### Completion Notes List
 
+**已完成（代码 + 文档 + 静态验证）：**
+- T1–T3 代码（3 文件）：`FullRender.tsx` / `ThumbnailIframe.tsx` 的 `sandbox="" → "allow-scripts"`、`route.ts` CSP `'sandbox' → 'sandbox allow-scripts'`，三处注释同步（opaque 仍隔离会话、放开脚本、严禁叠加 allow-same-origin）。
+- T4–T6 文档（3 文件）：PRD §5 NFR-1 加澄清注（隔离≠禁脚本，机制锁定 allow-scripts opaque）；architecture 第 10/72–80/231 行更正 + 修订注（srcDoc→src 一并纠 stale）；Story 2.3（done 历史 story）加集中修订注 + AC9 指针 + 末尾 retro 记录，**历史正文与 alex 2026-06-03 验收记录保留不删改**。
+- 🚨 安全红线落实：三处仅加 `allow-scripts` 一个 token，**未**叠加 `allow-same-origin` → opaque origin 保持，宿主 cookie/DOM/storage 隔离不变。
+- typecheck + lint 绿（0/0）。
+
+**待 alex 生产实测（review → done 的 gate，ops 交 alex）：**
+- (a) AC9 安全：含 `<script>` 写 cookie / 改 `parent.location` 的 HTML → 脚本执行但 `document.cookie` 空、改不动 parent、新标签直接打开亦 opaque（CSP allow-scripts）。
+- (b) FR-5：JS 驱动原型（如 RupayFlow APP Prototype）在 Full Render 完整渲染（非空白）。
+- (c) FR-4：同原型缩略图显示真实预览（非空壳）。
+
 ### File List
+
+**修改（代码）：**
+- `web/components/FullRender.tsx`（iframe `sandbox="" → "allow-scripts"` + 注释）
+- `web/components/ThumbnailIframe.tsx`（iframe `sandbox="" → "allow-scripts"` + 注释）
+- `web/app/api/entry/[id]/html/route.ts`（CSP `'sandbox' → 'sandbox allow-scripts'` + 注释）
+
+**修改（文档）：**
+- `_bmad-output/planning-artifacts/prds/prd-my-bmad-app-2026-05-28/prd.md`（§5 NFR-1 澄清注）
+- `_bmad-output/planning-artifacts/architectures/architecture-my-bmad-app-2026-05-28/architecture/core-architectural-decisions.md`（NFR-1 表 + 第 10/231 行 + 修订注）
+- `_bmad-output/implementation-artifacts/2-3-full-render-基础-归档跳转衔接.md`（集中修订注 + AC9 指针 + retro 记录）
+- `_bmad-output/planning-artifacts/architectures/architecture-my-bmad-app-2026-05-28/architecture/implementation-patterns-consistency-rules.md`（MUST 规则 §367 + Good Example + anti-pattern 注释 · Codex P2）
+- `_bmad-output/planning-artifacts/architectures/architecture-my-bmad-app-2026-05-28/architecture/project-structure-boundaries.md`（NFR-1 表集中修订注 + 表行 · Codex P2）
+
+## Senior Developer Review (Codex)
+
+**Reviewer**: Codex CLI v0.130.0（gpt-5.5, reasoning xhigh）· 2026-06-12 · 对抗式（`codex review -`，staged 全量）
+**Outcome**: 核心安全模型判定**正确**——运行时三处 iframe/CSP 只加 `allow-scripts`、无 `allow-same-origin`，opaque 隔离成立。2 个 findings（均文档/注释一致性，无代码 bug），**已修复并复验**。无 High/P1。
+
+### Action Items
+- [x] **[P2] 同步 architecture 包其余文件的旧沙箱规则** — create-story 只改了 `core-architectural-decisions.md`，遗漏同包另两文件：`implementation-patterns-consistency-rules.md:367` 的 MUST 规则（「iframe 必须 `sandbox=""`、加 `allow-*` 算违规」）会让后续 agent 把本次 allow-scripts 判违规并回滚；`project-structure-boundaries.md` 多处仍写 srcDoc + sandbox=""。**已修**：367 MUST 规则改为 `sandbox="allow-scripts"` + CSP（红线列明禁叠 allow-same-origin 等）；Good Example 范本改为 `src` + allow-scripts；project-structure NFR-1 表加集中修订注 + 改表行（覆盖目录树/数据流图等描述性残留）。
+- [x] **[P3] FullRender.tsx 残留 srcDoc 注释** — 第 16 行仍写「srcDoc 留给 Epic 3 缩略图」，但缩略图早已用 `src`。**已修**：改为「缩略图同样走 route-handler `src`，共享同一沙箱模型」。
+
+### Re-verification（2026-06-12）
+- `npm --prefix web run typecheck` + `run lint`：均绿（0/0）。P2/P3 均文档/注释改动，无代码逻辑变更。
+- 安全性质未变：运行时仍仅 `allow-scripts`、无 `allow-same-origin`。

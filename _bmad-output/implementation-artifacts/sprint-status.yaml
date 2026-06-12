@@ -68,7 +68,7 @@ development_status:
   3-3-排序切换sorttoggle-url-state: backlog
   3-4-full-render-完整导航上一下一-键盘: backlog
   3-5-响应式断点-移动端退化: backlog
-  3-6-nfr1沙箱修订-allow-scripts: ready-for-dev  # 经 sprint-change-proposal-2026-06-04（NFR-1 沙箱改 allow-scripts，跨 FR-4/5）
+  3-6-nfr1沙箱修订-allow-scripts: review  # 经 sprint-change-proposal-2026-06-04（NFR-1 沙箱改 allow-scripts，跨 FR-4/5）
   epic-3-retrospective: optional
 
   # ── Epic 4: Entry 管理 + 上线就绪（Entry Management & Production Readiness）· FR-7 · 5 stories ──

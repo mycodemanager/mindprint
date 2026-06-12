@@ -36,11 +36,12 @@ export async function GET(
       status: 200,
       headers: {
         'Content-Type': 'text/html; charset=utf-8',
-        // NFR-1 防御纵深（Codex review P1）：iframe 的 sandbox="" 只在「被嵌入」时生效；
+        // NFR-1 防御纵深（Codex review P1）：iframe 的 sandbox 只在「被嵌入」时生效；
         // 若认证态直接导航 / 新标签打开本 URL，归档 HTML 会作为同源顶层文档渲染、脚本可带
-        // alex 会话执行（存储型 XSS）。CSP `sandbox`（无 allow token，等价空 sandbox=""）让响应
-        // 文档自身被沙箱化 —— opaque origin + 禁 script，无论 iframe 嵌入还是直接导航都生效。
-        'Content-Security-Policy': 'sandbox',
+        // alex 会话执行（存储型 XSS）。CSP `sandbox allow-scripts`（无 allow-same-origin token）让响应
+        // 文档自身被沙箱化 —— opaque origin（脚本可执行但碰不到 alex 会话/cookie/storage），
+        // 无论 iframe 嵌入还是直接导航都生效（Story 3.6：放开脚本渲染 JS 原型，opaque 仍隔离会话）。
+        'Content-Security-Policy': 'sandbox allow-scripts',
       },
     });
   } catch (err) {
